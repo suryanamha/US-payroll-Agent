@@ -1,0 +1,5 @@
+{
+  "name": "Payroll Agent",
+  "description": "An application to compute payroll and generate pay stubs for employees or contractors in compliance with federal, state, and local regulations.",
+  "requestFramePermissions": []
+}
