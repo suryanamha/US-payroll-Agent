@@ -125,7 +125,7 @@ function App() {
                 <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">
                     Payroll Calculator
                 </h2>
-                <p className="text-gray-600">Enter employee details below to generate a compliant pay stub for NJ or FL.</p>
+                <p className="text-gray-600">Enter employee details below to generate a compliant pay stub for NJ, FL, NY, or CA.</p>
             </div>
           )}
           

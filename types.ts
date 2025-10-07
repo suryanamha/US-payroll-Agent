@@ -1,7 +1,7 @@
 export interface PayrollFormData {
   employeeName: string;
   employeeType: 'employee' | 'contractor';
-  state: 'NJ' | 'FL' | 'NY';
+  state: 'NJ' | 'FL' | 'NY' | 'CA' | 'TX';
   payPeriodStart: string;
   payPeriodEnd: string;
   payType: 'hourly' | 'salary';
@@ -10,9 +10,11 @@ export interface PayrollFormData {
   federalFilingStatus: 'single' | 'married_jointly' | 'married_separately' | 'head_of_household';
   stateFilingStatus: 'A' | 'B' | 'C' | 'D' | 'E'; // NJ specific filing statuses
   nyStateFilingStatus: 'single' | 'married' | 'head_of_household'; // NY specific filing statuses
+  caStateFilingStatus: 'single' | 'married' | 'head_of_household'; // CA specific filing statuses
   federalAllowances: number;
   stateAllowances: number; // NJ allowances
   nyStateAllowances: number; // NY allowances
+  caStateAllowances: number; // CA allowances
   njExemptSuiSdi: boolean;
   njExemptFli: boolean;
   nyPflWaiver: boolean;
@@ -34,6 +36,8 @@ export interface Taxes {
   nyStateIncomeTax: number;
   nyDisabilityInsurance: number; // NYSDI
   nyPaidFamilyLeave: number; // NYPFL
+  caStateIncomeTax: number;
+  caSDI: number;
 }
 
 export interface PayStubData {
@@ -44,7 +48,7 @@ export interface PayStubData {
   employeeInfo: {
     name: string;
     employeeType: 'employee' | 'contractor';
-    state: 'NJ' | 'FL' | 'NY';
+    state: 'NJ' | 'FL' | 'NY' | 'CA' | 'TX';
   };
   payPeriod: {
     startDate: string;

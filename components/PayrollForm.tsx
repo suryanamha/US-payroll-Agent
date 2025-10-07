@@ -17,9 +17,11 @@ const initialFormData: PayrollFormData = {
     federalFilingStatus: 'single',
     stateFilingStatus: 'B',
     nyStateFilingStatus: 'single',
+    caStateFilingStatus: 'single',
     federalAllowances: 1,
     stateAllowances: 1,
     nyStateAllowances: 1,
+    caStateAllowances: 1,
     njExemptSuiSdi: false,
     njExemptFli: false,
     nyPflWaiver: false,
@@ -138,6 +140,8 @@ export function PayrollForm({ onSubmit }: PayrollFormProps) {
                 newFormData.stateAllowances = 0;
                 newFormData.nyStateFilingStatus = 'single';
                 newFormData.nyStateAllowances = 0;
+                newFormData.caStateFilingStatus = 'single';
+                newFormData.caStateAllowances = 0;
                 newFormData.njExemptSuiSdi = false;
                 newFormData.njExemptFli = false;
                 newFormData.nyPflWaiver = false;
@@ -184,6 +188,8 @@ export function PayrollForm({ onSubmit }: PayrollFormProps) {
                     <option value="NJ">New Jersey</option>
                     <option value="FL">Florida</option>
                     <option value="NY">New York</option>
+                    <option value="CA">California</option>
+                    <option value="TX">Texas</option>
                 </Select>
             </Section>
 
@@ -241,6 +247,16 @@ export function PayrollForm({ onSubmit }: PayrollFormProps) {
                         <h4 className="font-semibold text-gray-600 text-sm">NY Tax Waivers</h4>
                         <Checkbox label="Employee has a waiver for Paid Family Leave (PFL)" id="nyPflWaiver" name="nyPflWaiver" checked={formData.nyPflWaiver} onChange={handleChange} disabled={isContractor} />
                     </div>
+                  </>
+                )}
+                 {formData.state === 'CA' && (
+                  <>
+                    <Select label="CA State Filing Status" id="caStateFilingStatus" name="caStateFilingStatus" value={formData.caStateFilingStatus} onChange={handleChange} disabled={isContractor}>
+                        <option value="single">Single</option>
+                        <option value="married">Married</option>
+                        <option value="head_of_household">Head of Household</option>
+                    </Select>
+                    <Input label="CA State Allowances" id="caStateAllowances" name="caStateAllowances" type="number" min="0" value={formData.caStateAllowances} onChange={handleChange} disabled={isContractor} />
                   </>
                 )}
             </Section>
