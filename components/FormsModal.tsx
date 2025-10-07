@@ -49,6 +49,8 @@ export const FormsModal: React.FC<FormsModalProps> = ({ isOpen, onClose, forms, 
     return null;
   }
   
+  // FIX: The reduce call was failing type inference due to an incorrect initial value `{}`.
+  // By casting the initial value, TypeScript can correctly infer the accumulator's type.
   const groupedForms = forms?.reduce((acc, form) => {
     const category = form.category || 'Other';
     if (!acc[category]) {
@@ -83,14 +85,18 @@ export const FormsModal: React.FC<FormsModalProps> = ({ isOpen, onClose, forms, 
                 <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
                     Here are the essential forms for this worker. Download each form and follow the instructions provided on the official websites.
                 </p>
-                {Object.entries(groupedForms).sort(([a], [b]) => a.localeCompare(b)).map(([category, formsInCategory]) => (
-                    <section key={category}>
-                        <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">{category}</h3>
-                        <ul className="space-y-4">
-                            {formsInCategory.map((form, index) => <FormCard key={index} form={form} />)}
-                        </ul>
-                    </section>
-                ))}
+                {Object.entries(groupedForms).sort(([a], [b]) => a.localeCompare(b)).map(([category, formsInCategory]) => {
+                    // FIX: The type of `formsInCategory` from Object.entries can be `unknown` in some TypeScript environments. We cast it to the correct type to ensure type safety.
+                    const typedFormsInCategory = formsInCategory as RequiredForm[];
+                    return (
+                        <section key={category}>
+                            <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">{category}</h3>
+                            <ul className="space-y-4">
+                                {typedFormsInCategory.map((form, index) => <FormCard key={index} form={form} />)}
+                            </ul>
+                        </section>
+                    );
+                })}
             </div>
           ) : (
              <p className="text-gray-700 text-center">No forms could be retrieved at this time. Please try again.</p>

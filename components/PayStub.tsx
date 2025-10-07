@@ -1,3 +1,4 @@
+
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import type { PayStubData } from '../types';
 
@@ -19,17 +20,37 @@ const StubRow: React.FC<{ label: string; value: string | number; isBold?: boolea
 
 
 export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
-    const { companyInfo, employeeInfo, payPeriod, earnings, grossPay, totalEarningsYTD, deductions, totalDeductions, netPay, netPayYTD } = data;
+    const { companyInfo, employeeInfo, payPeriod, earnings, grossPay, totalEarningsYTD, deductions, totalDeductions, netPay, netPayYTD, employerContributions } = data;
     const isContractor = employeeInfo.employeeType === 'contractor';
     const isNJ = employeeInfo.state === 'NJ';
     const isNY = employeeInfo.state === 'NY';
+    const isIN = employeeInfo.state === 'IN';
+    const isCA = employeeInfo.state === 'CA';
+    const isOR = employeeInfo.state === 'OR';
+    const isDE = employeeInfo.state === 'DE';
+    const isDC = employeeInfo.state === 'DC';
+    const isAL = employeeInfo.state === 'AL';
+    const isAK = employeeInfo.state === 'AK';
+    const isAZ = employeeInfo.state === 'AZ';
+    const isAR = employeeInfo.state === 'AR';
+    const isGA = employeeInfo.state === 'GA';
     const printContainerRef = useRef<HTMLDivElement>(null);
 
     const { taxes } = deductions;
     const totalTaxes = !isContractor && taxes ? Object.values(taxes).reduce((sum, amount) => sum + (amount || 0), 0) : 0;
     const totalNJTaxes = isNJ && taxes ? (taxes.njStateIncomeTax + taxes.njSUI + taxes.njSDI + taxes.njFLI) : 0;
     const totalNYTaxes = isNY && taxes ? (taxes.nyStateIncomeTax + taxes.nyDisabilityInsurance + taxes.nyPaidFamilyLeave) : 0;
-    
+    const totalINTaxes = isIN && taxes ? (taxes.inStateIncomeTax + taxes.inCountyIncomeTax) : 0;
+    const totalCATaxes = isCA && taxes ? (taxes.caStateIncomeTax + taxes.caSDI) : 0;
+    const totalORTaxes = isOR && taxes ? taxes.orStateIncomeTax : 0;
+    const totalDETaxes = isDE && taxes ? taxes.deStateIncomeTax : 0;
+    const totalDCTaxes = isDC && taxes ? taxes.dcStateIncomeTax : 0;
+    const totalALTaxes = isAL && taxes ? taxes.alStateIncomeTax : 0;
+    const totalAKTaxes = isAK && taxes ? taxes.akStateIncomeTax : 0; // Always 0
+    const totalAZTaxes = isAZ && taxes ? taxes.azStateIncomeTax : 0;
+    const totalARTaxes = isAR && taxes ? taxes.arStateIncomeTax : 0;
+    const totalGATaxes = isGA && taxes ? taxes.gaStateIncomeTax : 0;
+
     const handlePrint = () => {
         const input = printContainerRef.current;
         if (!input) {
@@ -84,6 +105,7 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
                 <div>
                     <h2 className="text-3xl font-extrabold text-gray-800">{companyInfo.name}</h2>
                     <p className="text-gray-500">{companyInfo.address}</p>
+                    {companyInfo.taxId && <p className="text-xs text-gray-500 mt-1">EIN: {companyInfo.taxId}</p>}
                 </div>
                 <h3 className="text-2xl font-bold text-gray-600">{isContractor ? 'Payment Voucher' : 'Pay Stub'}</h3>
             </header>
@@ -153,6 +175,78 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
                                         <StubRow label="Paid Family Leave (NYPFL)" value={-taxes.nyPaidFamilyLeave} />
                                     </>
                                 )}
+                                
+                                {isIN && totalINTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">INDIANA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.inStateIncomeTax} />
+                                        <StubRow label="County Income Tax" value={-taxes.inCountyIncomeTax} />
+                                    </>
+                                )}
+
+                                {isCA && totalCATaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">CALIFORNIA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.caStateIncomeTax} />
+                                        <StubRow label="State Disability (SDI)" value={-taxes.caSDI} />
+                                    </>
+                                )}
+
+                                {isOR && totalORTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">OREGON TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.orStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isDE && totalDETaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">DELAWARE TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.deStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isDC && totalDCTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">DISTRICT OF COLUMBIA TAXES</p>
+                                        <StubRow label="DC Income Tax" value={-taxes.dcStateIncomeTax} />
+                                    </>
+                                )}
+                                
+                                {isAL && totalALTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">ALABAMA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.alStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isAK && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">ALASKA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.akStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isAZ && totalAZTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">ARIZONA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.azStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isAR && totalARTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">ARKANSAS TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.arStateIncomeTax} />
+                                    </>
+                                )}
+                                
+                                {isGA && totalGATaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">GEORGIA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.gaStateIncomeTax} />
+                                    </>
+                                )}
 
                                 <div className="border-t my-2"></div>
                                 <StubRow label="Total Taxes" value={-totalTaxes} />
@@ -187,6 +281,14 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
                         <StubRow label="Gross Earnings" value={totalEarningsYTD} />
                         <StubRow label="Net Pay" value={netPayYTD} />
                     </div>
+                    
+                    {employerContributions && employerContributions.suta > 0 && (
+                        <div className="mt-6 bg-gray-50 p-4 rounded-lg shadow-lg">
+                            <h4 className="text-lg font-bold text-gray-800 border-b-2 border-gray-200 pb-1 mb-2">Employer Contributions</h4>
+                            <p className="text-xs text-gray-500 italic mb-2">Note: These are amounts paid by the employer and are not deducted from your pay.</p>
+                            <StubRow label="State Unemployment (SUTA)" value={employerContributions.suta} />
+                        </div>
+                    )}
                 </div>
             </section>
         </div>

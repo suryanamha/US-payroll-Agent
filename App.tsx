@@ -1,22 +1,32 @@
-import React, { useState, useRef } from 'react';
-import { PayrollForm } from './components/PayrollForm';
+
+import React, { useState, useRef, useEffect } from 'react';
+import { PayrollForm, initialFormData } from './components/PayrollForm';
 import { PayStub } from './components/PayStub';
+import { PayStubPreview } from './components/PayStubPreview';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Loader } from './components/Loader';
 import { ComplianceReportModal } from './components/ComplianceModal';
 import { FormsModal } from './components/FormsModal';
+import { SettingsModal } from './components/SettingsModal';
 import { calculatePayroll, checkPayStubCompliance, getRequiredForms } from './services/geminiService';
-import type { PayrollFormData, PayStubData, RequiredForm } from './types';
+import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo } from './types';
 
 // Define a type for the imperative handle ref
 interface PayStubRef {
   handlePrint: () => void;
 }
 
+const defaultCompanyInfo: CompanyInfo = {
+  name: 'Payroll Agent',
+  address: '123 Main St, Anytown, USA 12345',
+  taxId: '',
+};
+
+
 function App() {
   const [payStubData, setPayStubData] = useState<PayStubData | null>(null);
-  const [lastFormData, setLastFormData] = useState<PayrollFormData | null>(null);
+  const [formData, setFormData] = useState<PayrollFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const payStubRef = useRef<PayStubRef>(null);
@@ -30,15 +40,31 @@ function App() {
   const [isFormsModalOpen, setIsFormsModalOpen] = useState<boolean>(false);
   const [isFormsLoading, setIsFormsLoading] = useState<boolean>(false);
   const [requiredForms, setRequiredForms] = useState<RequiredForm[] | null>(null);
+  
+  // Company settings states
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      const savedInfo = localStorage.getItem('companyInfo');
+      if (savedInfo) {
+        setCompanyInfo(JSON.parse(savedInfo));
+      }
+    } catch (error) {
+      console.error("Failed to load company info from localStorage", error);
+    }
+  }, []);
 
 
-  const handleFormSubmit = async (formData: PayrollFormData) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError(null);
     setPayStubData(null);
-    setLastFormData(formData);
+
     try {
-      const result = await calculatePayroll(formData);
+      const result = await calculatePayroll(formData, companyInfo);
       setPayStubData(result);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -51,7 +77,7 @@ function App() {
   
   const handleReset = () => {
     setPayStubData(null);
-    setLastFormData(null);
+    setFormData(initialFormData);
     setError(null);
     setIsLoading(false);
     // reset compliance state
@@ -69,14 +95,14 @@ function App() {
   };
 
   const handleCheckCompliance = async () => {
-    if (!payStubData || !lastFormData) return;
+    if (!payStubData) return;
 
     setIsReportModalOpen(true);
     setIsReportLoading(true);
     setReport(null);
 
     try {
-      const complianceReport = await checkPayStubCompliance(payStubData, lastFormData);
+      const complianceReport = await checkPayStubCompliance(payStubData, formData);
       setReport(complianceReport);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -93,14 +119,12 @@ function App() {
 
   // Handler for fetching required forms
   const handleViewForms = async () => {
-    if (!lastFormData) return;
-
     setIsFormsModalOpen(true);
     setIsFormsLoading(true);
     setRequiredForms(null);
 
     try {
-      const forms = await getRequiredForms(lastFormData);
+      const forms = await getRequiredForms(formData);
       setRequiredForms(forms);
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred.';
@@ -113,24 +137,36 @@ function App() {
   const closeFormsModal = () => {
     setIsFormsModalOpen(false);
   }
+  
+  const handleSaveSettings = (newInfo: CompanyInfo) => {
+    setCompanyInfo(newInfo);
+    try {
+      localStorage.setItem('companyInfo', JSON.stringify(newInfo));
+    } catch (error) {
+      console.error("Failed to save company info to localStorage", error);
+    }
+  };
+
+  const openSettingsModal = () => setIsSettingsModalOpen(true);
+  const closeSettingsModal = () => setIsSettingsModalOpen(false);
 
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800 font-sans">
-      <Header />
+      <Header onSettingsClick={openSettingsModal} />
       <main className="flex-grow container mx-auto p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {!payStubData && !isLoading && (
             <div className="text-center mb-8">
                 <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 mb-2">
                     Payroll Calculator
                 </h2>
-                <p className="text-gray-600">Enter employee details below to generate a compliant pay stub for NJ or FL.</p>
+                <p className="text-gray-600">Enter employee details below to generate a compliant pay stub for NJ, FL, NY, IN, CA, OR, DE, DC, AL, AK, AZ, AR, or GA.</p>
             </div>
           )}
           
           {isLoading ? (
-            <Loader />
+            <Loader state={formData?.state} />
           ) : error ? (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-6 rounded-lg shadow-md text-center" role="alert">
               <strong className="font-bold text-lg">Calculation Error</strong>
@@ -140,7 +176,7 @@ function App() {
               </button>
             </div>
           ) : payStubData ? (
-            <div>
+            <div className="max-w-4xl mx-auto">
               <PayStub ref={payStubRef} data={payStubData} />
               <div className="text-center mt-8 flex justify-center items-center gap-4 flex-wrap">
                  <button onClick={handleReset} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-md hover:shadow-lg">
@@ -158,7 +194,18 @@ function App() {
               </div>
             </div>
           ) : (
-            <PayrollForm onSubmit={handleFormSubmit} />
+             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+              <div className="lg:col-span-3">
+                <PayrollForm 
+                  data={formData}
+                  onDataChange={setFormData}
+                  onSubmit={handleFormSubmit} 
+                />
+              </div>
+              <div className="lg:col-span-2">
+                <PayStubPreview data={formData} />
+              </div>
+            </div>
           )}
         </div>
       </main>
@@ -174,6 +221,12 @@ function App() {
         onClose={closeFormsModal}
         forms={requiredForms}
         isLoading={isFormsLoading}
+      />
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={closeSettingsModal}
+        onSave={handleSaveSettings}
+        currentInfo={companyInfo}
       />
     </div>
   );
