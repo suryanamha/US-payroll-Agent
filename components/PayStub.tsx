@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import type { PayStubData } from '../types';
 
@@ -34,6 +35,7 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const isAZ = employeeInfo.state === 'AZ';
     const isAR = employeeInfo.state === 'AR';
     const isGA = employeeInfo.state === 'GA';
+    const isFL = employeeInfo.state === 'FL';
     const printContainerRef = useRef<HTMLDivElement>(null);
 
     const { taxes } = deductions;
@@ -45,6 +47,7 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const totalORTaxes = isOR && taxes ? taxes.orStateIncomeTax : 0;
     const totalDETaxes = isDE && taxes ? taxes.deStateIncomeTax : 0;
     const totalDCTaxes = isDC && taxes ? taxes.dcStateIncomeTax : 0;
+    const totalFLTaxes = isFL && taxes ? taxes.flStateIncomeTax : 0; // Always 0
     const totalALTaxes = isAL && taxes ? taxes.alStateIncomeTax : 0;
     const totalAKTaxes = isAK && taxes ? taxes.akStateIncomeTax : 0; // Always 0
     const totalAZTaxes = isAZ && taxes ? taxes.azStateIncomeTax : 0;
@@ -210,6 +213,13 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
                                     <>
                                         <p className="text-xs font-semibold text-gray-500 mt-2">DISTRICT OF COLUMBIA TAXES</p>
                                         <StubRow label="DC Income Tax" value={-taxes.dcStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isFL && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">FLORIDA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.flStateIncomeTax} />
                                     </>
                                 )}
                                 

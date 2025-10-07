@@ -1,10 +1,38 @@
 
-
 import { GoogleGenAI, Type } from "@google/genai";
-import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo } from '../types';
+import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from '../types';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+
+const taxesSchema = {
+    type: Type.OBJECT,
+    properties: {
+        federalIncomeTax: { type: Type.NUMBER },
+        socialSecurity: { type: Type.NUMBER },
+        medicare: { type: Type.NUMBER },
+        flStateIncomeTax: { type: Type.NUMBER },
+        njStateIncomeTax: { type: Type.NUMBER },
+        njSUI: { type: Type.NUMBER },
+        njSDI: { type: Type.NUMBER },
+        njFLI: { type: Type.NUMBER },
+        nyStateIncomeTax: { type: Type.NUMBER },
+        nyDisabilityInsurance: { type: Type.NUMBER },
+        nyPaidFamilyLeave: { type: Type.NUMBER },
+        inStateIncomeTax: { type: Type.NUMBER },
+        inCountyIncomeTax: { type: Type.NUMBER },
+        caStateIncomeTax: { type: Type.NUMBER },
+        caSDI: { type: Type.NUMBER },
+        orStateIncomeTax: { type: Type.NUMBER },
+        deStateIncomeTax: { type: Type.NUMBER },
+        dcStateIncomeTax: { type: Type.NUMBER },
+        alStateIncomeTax: { type: Type.NUMBER },
+        akStateIncomeTax: { type: Type.NUMBER },
+        azStateIncomeTax: { type: Type.NUMBER },
+        arStateIncomeTax: { type: Type.NUMBER },
+        gaStateIncomeTax: { type: Type.NUMBER },
+    },
+};
 
 // Defines the strict JSON schema the Gemini API must follow for its response.
 const payStubSchema = {
@@ -58,33 +86,7 @@ const payStubSchema = {
                         properties: { name: { type: Type.STRING }, amount: { type: Type.NUMBER } },
                     },
                 },
-                taxes: {
-                    type: Type.OBJECT,
-                    properties: {
-                        federalIncomeTax: { type: Type.NUMBER },
-                        socialSecurity: { type: Type.NUMBER },
-                        medicare: { type: Type.NUMBER },
-                        njStateIncomeTax: { type: Type.NUMBER },
-                        njSUI: { type: Type.NUMBER },
-                        njSDI: { type: Type.NUMBER },
-                        njFLI: { type: Type.NUMBER },
-                        nyStateIncomeTax: { type: Type.NUMBER },
-                        nyDisabilityInsurance: { type: Type.NUMBER },
-                        nyPaidFamilyLeave: { type: Type.NUMBER },
-                        inStateIncomeTax: { type: Type.NUMBER },
-                        inCountyIncomeTax: { type: Type.NUMBER },
-                        caStateIncomeTax: { type: Type.NUMBER },
-                        caSDI: { type: Type.NUMBER },
-                        orStateIncomeTax: { type: Type.NUMBER },
-                        deStateIncomeTax: { type: Type.NUMBER },
-                        dcStateIncomeTax: { type: Type.NUMBER },
-                        alStateIncomeTax: { type: Type.NUMBER },
-                        akStateIncomeTax: { type: Type.NUMBER },
-                        azStateIncomeTax: { type: Type.NUMBER },
-                        arStateIncomeTax: { type: Type.NUMBER },
-                        gaStateIncomeTax: { type: Type.NUMBER },
-                    },
-                },
+                taxes: taxesSchema,
                 postTax: {
                     type: Type.ARRAY,
                     items: {
@@ -123,20 +125,17 @@ const requiredFormsSchema = {
     },
 };
 
+// Helper function to safely look up Indiana county tax rates.
+const getCountyRate = (countyName: string): number => {
+    if (!countyName) return 0;
+    const normalizedCountyName = countyName.trim().toLowerCase();
+    const rate = INDIANA_COUNTY_TAX_RATES[normalizedCountyName as keyof typeof INDIANA_COUNTY_TAX_RATES];
+    return rate || 0; // Return 0 if county is not found
+};
 
-export async function calculatePayroll(formData: PayrollFormData, companyInfo: CompanyInfo): Promise<PayStubData> {
-    
-    // Helper function to safely look up Indiana county tax rates.
-    const getCountyRate = (countyName: string): number => {
-      if (!countyName) return 0;
-      const normalizedCountyName = countyName.trim().toLowerCase();
-      const rate = INDIANA_COUNTY_TAX_RATES[normalizedCountyName as keyof typeof INDIANA_COUNTY_TAX_RATES];
-      return rate || 0; // Return 0 if county is not found
-    };
-
+const buildBasePrompt = (formData: PayrollFormData) => {
     const residenceCountyRate = getCountyRate(formData.inCountyOfResidence);
     const workCountyRate = getCountyRate(formData.inCountyOfWork);
-    
     const otherStates = "NJ, FL, NY, IN, CA, OR, DE, DC, AL, AK, AZ, AR, GA".split(', ').filter(s => s !== formData.state).join(', ');
 
     // Pre-process deductions to create a simple name for the AI prompt.
@@ -152,21 +151,19 @@ export async function calculatePayroll(formData: PayrollFormData, companyInfo: C
 
     const processedPreTaxDeductions = processDeductions(formData.preTaxDeductions);
     const processedPostTaxDeductions = processDeductions(formData.postTaxDeductions);
-
-
-    const prompt = `
+    
+    return {
+        prompt: `
       Act as a payroll calculation expert for the state of ${formData.state} for the current year.
-      Given the following worker and payroll information, calculate a complete pay stub or payment voucher.
+      Given the following worker and payroll information, calculate the required values.
       Adhere strictly to all current federal and state tax laws for the specified state.
-      The pay date should be the same as the pay period end date.
-      The company is "${companyInfo.name}" located at "${companyInfo.address}". ${companyInfo.taxId ? `Its tax ID is ${companyInfo.taxId}.` : ''}
       Calculate all monetary values precisely to two decimal places.
 
       Worker Data:
       - Name: ${formData.employeeName}
       - State: ${formData.state}
       - Type: ${formData.employeeType}
-      - Pay Period: ${formData.payPeriodStart} to ${formData.payPeriodEnd}
+      - Pay Period End Date: ${formData.payPeriodEnd}
       - Pay Frequency: ${formData.payFrequency}
       - Pay Type: ${formData.payType}
       - Rate: $${formData.rate} ${formData.payType === 'hourly' ? '/hour' : '/year'}
@@ -218,43 +215,108 @@ export async function calculatePayroll(formData: PayrollFormData, companyInfo: C
       - GA Exempt State Tax: ${formData.state === 'GA' && formData.employeeType === 'employee' ? formData.gaExemptStateTax : 'N/A'}
       - Pre-tax Deductions: ${JSON.stringify(processedPreTaxDeductions)}
       - Post-tax Deductions: ${JSON.stringify(processedPostTaxDeductions)}
-      - Starting Gross Pay YTD: ${formData.grossPayYTD}
-      - Starting Total Deductions YTD: ${formData.totalDeductionsYTD}
-      - Starting Net Pay YTD: ${formData.netPayYTD}
-      - Employer State Unemployment (SUTA) Rate: ${formData.employeeType === 'employee' ? formData.employerSutaRate + '%' : 'N/A'}
+      
+      Tax Calculation Guidelines (Current Year):
+      - Social Security Tax: Calculate at 6.2% on gross wages up to the annual limit of $168,600.
+      - Medicare Tax: Calculate at 1.45% on all gross wages. There is no wage limit.
+      - Federal Income Tax: Withhold based on the employee's filing status, allowances, and the current year's federal tax brackets (progressive rates: 10%, 12%, 22%, 24%, 32%, 35%, 37%). Use the percentage method for withholding calculations.
+      - State & Local Taxes: Apply the specific tax laws for ${formData.state}. Use the most current, publicly available tax tables and rules for all state-level calculations.
+      - Taxable Income: For all taxes, the taxable income is the Gross Pay for the period MINUS the total of all *applicable* pre-tax deductions. This is a critical step.
 
-      Instructions:
+      Calculation Steps:
       1. Calculate Gross Pay for the current period. For salaried employees, the provided rate is the annual salary; you must divide this by the correct number of pay periods per year to determine the gross pay for this period (Weekly: 52, Bi-weekly: 26, Semi-monthly: 24, Monthly: 12). For hourly employees, gross pay is rate * hours worked.
-      2. Determine which deductions from the provided lists apply to the current pay period. Each deduction object has \`name\`, \`amount\`, \`isRecurring\`, \`startDate\`, and \`endDate\` fields.
-         - If \`isRecurring\` is \`false\`, the deduction applies.
-         - If \`isRecurring\` is \`true\`, the deduction ONLY applies if the current pay period end date ('${formData.payPeriodEnd}') falls within the \`startDate\` and \`endDate\`. The range is inclusive. An empty \`startDate\` or \`endDate\` means no boundary on that side.
-      3. Calculate the total amount of *applicable* pre-tax deductions. The final \`deductions.preTax\` array in the output JSON should ONLY contain the deductions (name and amount) that were actually applied.
-      4. If the worker type is 'contractor', set all fields in the \`deductions.taxes\` object to 0.
-      5. If the worker type is 'employee', calculate all applicable federal and state taxes based on the gross pay minus the total *applicable* pre-tax deductions.
-      6. All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
-      7. For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
-      8. For New York: If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
-      9. For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
-      10. For California: Calculate CA state income tax and SDI. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
-      11. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
-      12. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
-      13. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
+      2. Determine which pre-tax deductions apply to this pay period based on their recurring schedule and the period end date ('${formData.payPeriodEnd}').
+      3. If the worker type is 'contractor', set all fields in the 'taxes' object to 0.
+      4. If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
+      5. All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
+      6. For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
+      7. For New York: If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
+      8. For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
+      9. For California: Calculate CA state income tax and SDI. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
+      10. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
+      11. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
+      12. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
+      13. For Florida: \`flStateIncomeTax\` MUST be 0 as there is no state income tax.
       14. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0.
       15. For Alaska: \`akStateIncomeTax\` MUST be 0 as there is no state income tax.
       16. For Arizona: If \`azExemptStateTax\` is true, \`azStateIncomeTax\` MUST be 0. Otherwise, calculate it based on the specified withholding rate.
       17. For Arkansas: If \`arExemptStateTax\` is true, \`arStateIncomeTax\` MUST be 0.
       18. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0.
-      19. The final \`deductions.postTax\` array in the output JSON should ONLY contain the deductions (name and amount) that were actually applied for this period.
-      20. Calculate Total Deductions by summing all *applied* pre-tax deductions, all calculated taxes, and all *applied* post-tax deductions.
-      21. Calculate Net Pay (Gross Pay - Total Deductions).
-      22. If the worker is an 'employee', calculate the Employer's SUTA contribution for this period. The formula is Gross Pay * (${formData.employerSutaRate} / 100). Place this value in the \`employerContributions.suta\` field. This amount SHOULD NOT be included in the 'totalDeductions' and SHOULD NOT affect 'netPay'. If the worker is a 'contractor' or the rate is 0, set \`employerContributions.suta\` to 0.
-      23. Calculate the new YTD values. The final 'totalEarningsYTD' should be 'Starting Gross Pay YTD' + current 'grossPay'. The final 'netPayYTD' should be 'Starting Net Pay YTD' + current 'netPay'.
-      24. Return the final, complete pay stub object adhering to the provided JSON schema.
+    `,
+        processedPreTaxDeductions,
+        processedPostTaxDeductions,
+    }
+}
+
+
+export async function calculateTaxesOnly(formData: PayrollFormData): Promise<Taxes> {
+    const { prompt } = buildBasePrompt(formData);
+    const finalPrompt = `
+      ${prompt}
+      
+      Task:
+      Based on the data and guidelines provided, calculate ONLY the statutory tax deductions.
+      Return a single JSON object containing all the calculated tax values, adhering strictly to the provided 'taxesSchema'.
+      Do not calculate any other part of the pay stub.
+    `;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: finalPrompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: taxesSchema,
+        },
+    });
+
+    try {
+        const jsonText = response.text.trim();
+        const taxes = JSON.parse(jsonText);
+        return taxes;
+    } catch (e) {
+        console.error("Failed to parse Gemini response for taxes:", response.text);
+        throw new Error("Could not understand the tax data from the AI. Please try again.");
+    }
+}
+
+
+export async function calculatePayroll(formData: PayrollFormData, companyInfo: CompanyInfo): Promise<PayStubData> {
+    const { prompt, processedPreTaxDeductions, processedPostTaxDeductions } = buildBasePrompt(formData);
+    const finalPrompt = `
+      ${prompt}
+
+      Company Info:
+      - Name: ${companyInfo.name}
+      - Address: ${companyInfo.address}
+      - Tax ID (EIN): ${companyInfo.taxId || 'N/A'}
+
+      Pay Period Info:
+      - Start Date: ${formData.payPeriodStart}
+      - End Date: ${formData.payPeriodEnd}
+      - Pay Date should be the same as the pay period end date.
+
+      YTD Info:
+      - Starting Gross Pay YTD: ${formData.grossPayYTD}
+      - Starting Total Deductions YTD: ${formData.totalDeductionsYTD}
+      - Starting Net Pay YTD: ${formData.netPayYTD}
+
+      Employer Info:
+      - Employer State Unemployment (SUTA) Rate: ${formData.employeeType === 'employee' ? formData.employerSutaRate + '%' : 'N/A'}
+      
+      Task-Specific Instructions:
+      1.  Follow all the "Calculation Steps" from above.
+      2.  The final \`deductions.preTax\` array in the output JSON should ONLY contain the deductions (name and amount) that were actually applied for this period.
+      3.  The final \`deductions.postTax\` array in the output JSON should ONLY contain the deductions (name and amount) that were actually applied for this period.
+      4.  Calculate Total Deductions by summing all *applied* pre-tax deductions, all calculated taxes, and all *applied* post-tax deductions.
+      5.  Calculate Net Pay (Gross Pay - Total Deductions).
+      6.  If the worker is an 'employee', calculate the Employer's SUTA contribution for this period. The formula is Gross Pay * (${formData.employerSutaRate} / 100). Place this value in the \`employerContributions.suta\` field. This amount SHOULD NOT be included in the 'totalDeductions' and SHOULD NOT affect 'netPay'. If the worker is a 'contractor' or the rate is 0, set \`employerContributions.suta\` to 0.
+      7.  Calculate the new YTD values. The final 'totalEarningsYTD' should be 'Starting Gross Pay YTD' + current 'grossPay'. The final 'netPayYTD' should be 'Starting Net Pay YTD' + current 'netPay'.
+      8.  Return the final, complete pay stub object adhering to the provided JSON schema.
     `;
     
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: prompt,
+        contents: finalPrompt,
         config: {
             responseMimeType: "application/json",
             responseSchema: payStubSchema,
@@ -314,6 +376,7 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
     - For Oregon: If 'orExempt' is true, confirm 'orStateIncomeTax' is 0.
     - For Delaware: If 'deExemptStateTax' is true, confirm 'deStateIncomeTax' is 0.
     - For District of Columbia: If 'dcExemptStateTax' is true, confirm 'dcStateIncomeTax' is 0.
+    - For Florida: Verify that 'flStateIncomeTax' is 0.
     - For Alabama: If 'alExemptStateTax' is true, confirm 'alStateIncomeTax' is 0.
     - For Alaska: Verify that 'akStateIncomeTax' is 0.
     - For Arizona: If 'azExemptStateTax' is true, confirm 'azStateIncomeTax' is 0.
@@ -344,7 +407,7 @@ export async function getRequiredForms(formData: PayrollFormData): Promise<Requi
 
     Instructions:
     1.  Identify the most common and critical forms. For an 'employee', this MUST include Form I-9, Form W-4, and the primary state tax withholding form (like NJ-W4 for New Jersey, IT-2104 for New York, WH-4 for Indiana, DE 4 for California, OR-W-4 for Oregon, W-4 DE for Delaware, D-4 for the District of Columbia, A-4 for Alabama, A-4 for Arizona, AR4EC for Arkansas, or G-4 for Georgia). For a 'contractor', the list MUST include Form W-9.
-    2.  If the state is Alaska, which has no state income tax, do not include a state tax withholding form.
+    2.  If the state is Alaska or Florida, which have no state income tax, do not include a state tax withholding form.
     3.  For each form, provide all the requested details: formName, formId, purpose, link, pdfLink, filledBy, and category.
     4.  'link' must be the URL to the official government *information page*.
     5.  'pdfLink' must be a direct link to the fillable PDF file itself. It should end with '.pdf'.

@@ -10,7 +10,7 @@ import { ComplianceReportModal } from './components/ComplianceModal';
 import { FormsModal } from './components/FormsModal';
 import { SettingsModal } from './components/SettingsModal';
 import { calculatePayroll, checkPayStubCompliance, getRequiredForms } from './services/geminiService';
-import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo } from './types';
+import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from './types';
 
 // Define a type for the imperative handle ref
 interface PayStubRef {
@@ -44,6 +44,9 @@ function App() {
   // Company settings states
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+
+  // State for suggested taxes
+  const [suggestedTaxes, setSuggestedTaxes] = useState<Taxes | null>(null);
 
   useEffect(() => {
     try {
@@ -88,6 +91,8 @@ function App() {
     setRequiredForms(null);
     setIsFormsModalOpen(false);
     setIsFormsLoading(false);
+    // reset suggested taxes
+    setSuggestedTaxes(null);
   };
 
   const handlePrint = () => {
@@ -200,10 +205,12 @@ function App() {
                   data={formData}
                   onDataChange={setFormData}
                   onSubmit={handleFormSubmit} 
+                  suggestedTaxes={suggestedTaxes}
+                  onSuggestionsChange={setSuggestedTaxes}
                 />
               </div>
               <div className="lg:col-span-2">
-                <PayStubPreview data={formData} />
+                <PayStubPreview data={formData} suggestedTaxes={suggestedTaxes} />
               </div>
             </div>
           )}

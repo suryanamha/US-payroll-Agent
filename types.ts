@@ -103,6 +103,7 @@ export interface Taxes {
   federalIncomeTax: number;
   socialSecurity: number;
   medicare: number;
+  flStateIncomeTax: number;
   njStateIncomeTax: number;
   njSUI: number;
   njSDI: number;

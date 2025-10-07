@@ -1,7 +1,6 @@
 
-
 import React from 'react';
-import type { PayrollFormData } from '../types';
+import type { PayrollFormData, Taxes } from '../types';
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -14,7 +13,7 @@ const PreviewRow: React.FC<{ label: string; value: string | number; isBold?: boo
     </div>
 );
 
-export function PayStubPreview({ data }: { data: PayrollFormData }) {
+export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData, suggestedTaxes: Taxes | null }) {
 
     const calculateGrossPay = (): number => {
         if (!data || data.rate <= 0) return 0;
@@ -39,16 +38,12 @@ export function PayStubPreview({ data }: { data: PayrollFormData }) {
     
     const payPeriodEndDate = data.payPeriodEnd;
 
-    // FIX: Define a union type for deductions to use in helper functions, which resolves type errors when calling `filter` and `getDeductionName` with different deduction types.
     type AnyDeduction = (typeof data.preTaxDeductions)[number] | (typeof data.postTaxDeductions)[number];
 
     const isDeductionActive = (ded: AnyDeduction) => {
-        // If no end date is selected yet, assume all deductions are active for preview purposes.
         if (!payPeriodEndDate) return true;
-        // Always active if not recurring.
         if (!ded.isRecurring) return true;
         
-        // Check date range for recurring deductions
         const startDate = ded.startDate;
         const endDate = ded.endDate;
         const isAfterStart = !startDate || payPeriodEndDate >= startDate;
@@ -62,8 +57,9 @@ export function PayStubPreview({ data }: { data: PayrollFormData }) {
 
     const preTaxTotal = activePreTaxDeductions.reduce((sum, d) => sum + (d.amount || 0), 0);
     const postTaxTotal = activePostTaxDeductions.reduce((sum, d) => sum + (d.amount || 0), 0);
-    
-    const totalDeductions = preTaxTotal + postTaxTotal;
+    const totalSuggestedTaxes = suggestedTaxes && data.employeeType === 'employee' ? Object.values(suggestedTaxes).reduce((sum, tax) => sum + (tax || 0), 0) : 0;
+
+    const totalDeductions = preTaxTotal + postTaxTotal + totalSuggestedTaxes;
     const netPayEstimate = grossPay - totalDeductions;
     const employerSutaContribution = data.employeeType === 'employee' ? grossPay * (data.employerSutaRate / 100) : 0;
 
@@ -85,7 +81,7 @@ export function PayStubPreview({ data }: { data: PayrollFormData }) {
                     <hr className="my-2"/>
                     <PreviewRow label="Gross Pay" value={grossPay} isBold />
                     
-                    <p className="text-xs font-semibold text-gray-500 pt-2">DEDUCTIONS</p>
+                    <p className="text-xs font-semibold text-gray-500 pt-2">VOLUNTARY DEDUCTIONS</p>
                     {data.preTaxDeductions.map((ded, i) => {
                         const isActive = isDeductionActive(ded);
                         return (
@@ -97,7 +93,30 @@ export function PayStubPreview({ data }: { data: PayrollFormData }) {
                              />
                         );
                     })}
-                    <PreviewRow label="Taxes" value="(Calculated on submit)" className="text-gray-500 italic" />
+                    
+                    {data.employeeType === 'employee' && (
+                        <>
+                            <p className="text-xs font-semibold text-gray-500 pt-2">TAXES (ESTIMATED)</p>
+                            {suggestedTaxes ? (
+                                <>
+                                    {suggestedTaxes.federalIncomeTax > 0 && <PreviewRow label="Federal Income Tax" value={-suggestedTaxes.federalIncomeTax} />}
+                                    {suggestedTaxes.socialSecurity > 0 && <PreviewRow label="Social Security" value={-suggestedTaxes.socialSecurity} />}
+                                    {suggestedTaxes.medicare > 0 && <PreviewRow label="Medicare" value={-suggestedTaxes.medicare} />}
+                                    {Object.entries(suggestedTaxes).map(([key, value]) => {
+                                        if (value > 0 && key.toLowerCase().includes(data.state.toLowerCase())) {
+                                            const name = key.replace(/([A-Z])/g, ' $1').replace('Income Tax', 'IT').replace('State', '').trim()
+                                            return <PreviewRow key={key} label={name} value={-value} />
+                                        }
+                                        return null;
+                                    })}
+                                    <PreviewRow label="Total Taxes" value={-totalSuggestedTaxes} className="font-semibold" />
+                                </>
+                            ) : (
+                                <PreviewRow label="Taxes" value="(Click 'Calculate' in form)" className="text-gray-500 italic" />
+                            )}
+                        </>
+                    )}
+
                     {data.postTaxDeductions.map((ded, i) => {
                         const isActive = isDeductionActive(ded);
                         return (
@@ -125,7 +144,7 @@ export function PayStubPreview({ data }: { data: PayrollFormData }) {
                 </div>
 
                 <p className="text-xs text-gray-500 mt-6 text-center italic">
-                    This is an estimate. Final tax withholdings will be calculated upon submission. Inactive deductions are struck through.
+                    This is an estimate. Final calculations occur upon submission. Inactive deductions are struck through.
                 </p>
             </div>
         </div>
