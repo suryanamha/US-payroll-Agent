@@ -67,6 +67,8 @@ const payStubSchema = {
                         nyStateIncomeTax: { type: Type.NUMBER },
                         nyDisabilityInsurance: { type: Type.NUMBER },
                         nyPaidFamilyLeave: { type: Type.NUMBER },
+                        caStateIncomeTax: { type: Type.NUMBER },
+                        caSDI: { type: Type.NUMBER },
                     },
                 },
                 postTax: {
@@ -128,6 +130,8 @@ export async function calculatePayroll(formData: PayrollFormData): Promise<PaySt
       - NY State Filing Status: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyStateFilingStatus : 'N/A'}
       - NY State Allowances: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyStateAllowances : 'N/A'}
       - NY PFL Waiver: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyPflWaiver : 'N/A'}
+      - CA State Filing Status: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caStateFilingStatus : 'N/A'}
+      - CA State Allowances: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caStateAllowances : 'N/A'}
       - Pre-tax Deductions: ${JSON.stringify(formData.preTaxDeductions)}
       - Post-tax Deductions: ${JSON.stringify(formData.postTaxDeductions)}
       - Starting Gross Pay YTD: ${formData.grossPayYTD}
@@ -138,10 +142,11 @@ export async function calculatePayroll(formData: PayrollFormData): Promise<PaySt
       1. Calculate Gross Pay for the current period. For salaried employees, determine the gross pay for the specified pay period.
       2. If the worker type is 'contractor', set all fields in the deductions.taxes object to 0.
       3. If the worker type is 'employee', calculate all applicable federal and state taxes based on the gross pay minus pre-tax deductions.
-      4. If the state is Florida, all NJ and NY tax fields must be 0.
-      5. If the state is New Jersey, all NY tax fields must be 0. Calculate all applicable NJ taxes (njStateIncomeTax, njSUI, njSDI, njFLI). If 'NJ SUI/SDI Exempt' is true, set both njSUI and njSDI to 0. If 'NJ FLI Exempt' is true, set njFLI to 0.
-      6. If the state is New York, all NJ tax fields must be 0. Calculate all applicable NY taxes (nyStateIncomeTax, nyDisabilityInsurance, nyPaidFamilyLeave). If 'NY PFL Waiver' is true, set nyPaidFamilyLeave to 0.
-      7. Calculate Total Deductions by summing all pre-tax deductions, all calculated taxes, and all post-tax deductions.
+      4. If the state is Florida or Texas, all NJ, NY, and CA tax fields must be 0.
+      5. If the state is New Jersey, all NY and CA tax fields must be 0. Calculate all applicable NJ taxes (njStateIncomeTax, njSUI, njSDI, njFLI). If 'NJ SUI/SDI Exempt' is true, set both njSUI and njSDI to 0. If 'NJ FLI Exempt' is true, set njFLI to 0.
+      6. If the state is New York, all NJ and CA tax fields must be 0. Calculate all applicable NY taxes (nyStateIncomeTax, nyDisabilityInsurance, nyPaidFamilyLeave). If 'NY PFL Waiver' is true, set nyPaidFamilyLeave to 0.
+      7. If the state is California, all NJ and NY tax fields must be 0. Calculate all applicable CA taxes (caStateIncomeTax, caSDI).
+      8. Calculate Total Deductions by summing all pre-tax deductions, all calculated taxes, and all post-tax deductions.
       8. Calculate Net Pay (Gross Pay - Total Deductions).
       9. Calculate the new YTD values. The final 'totalEarningsYTD' should be 'Starting Gross Pay YTD' + current 'grossPay'. The final 'netPayYTD' should be 'Starting Net Pay YTD' + current 'netPay'.
       10. Return the final, complete pay stub object adhering to the provided JSON schema.
@@ -190,6 +195,7 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
     - For Florida, verify no state income tax is listed.
     - For New Jersey, verify NJ taxes are listed. If the original input data indicates the worker is exempt from SUI/SDI or FLI, confirm those specific taxes are 0 on the pay stub.
     - For New York, verify NY taxes are listed. If the original input data indicates the worker has a PFL waiver, confirm that NY Paid Family Leave is 0 on the pay stub.
+    - For California, verify CA taxes (State Income Tax, SDI) are listed.
     - Mention if the hourly rate (if applicable) is above the state minimum wage.
     - Conclude with a general statement about overall compliance based on the visible data.
     - Format the output as clean, readable text.
