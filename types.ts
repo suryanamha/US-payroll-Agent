@@ -20,6 +20,8 @@ export interface PayrollFormData {
   payType: 'hourly' | 'salary';
   rate: number;
   hoursWorked: number;
+  overtimeHoursWorked: number;
+  overtimeRateMultiplier: number;
   federalFilingStatus: 'single' | 'married_jointly' | 'married_separately' | 'head_of_household';
   federalAllowances: number;
   // NJ

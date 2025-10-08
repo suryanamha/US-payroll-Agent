@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import type { PayrollFormData, Taxes } from '../types';
 
@@ -19,7 +20,9 @@ export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData
         if (!data || data.rate <= 0) return 0;
 
         if (data.payType === 'hourly') {
-            return data.rate * data.hoursWorked;
+             const regularPay = data.rate * data.hoursWorked;
+            const overtimePay = data.overtimeHoursWorked * data.rate * data.overtimeRateMultiplier;
+            return regularPay + overtimePay;
         }
 
         if (data.payType === 'salary') {
@@ -35,6 +38,8 @@ export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData
     };
 
     const grossPay = calculateGrossPay();
+    const regularPay = data.payType === 'hourly' ? data.rate * data.hoursWorked : 0;
+    const overtimePay = data.payType === 'hourly' ? data.overtimeHoursWorked * data.rate * data.overtimeRateMultiplier : 0;
     
     const payPeriodEndDate = data.payPeriodEnd;
 
@@ -79,8 +84,17 @@ export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData
                 <div className="space-y-2">
                     <PreviewRow label="Employee" value={data.employeeName || '...'} />
                     <hr className="my-2"/>
-                    <PreviewRow label="Gross Pay" value={grossPay} isBold />
                     
+                    {data.payType === 'hourly' && grossPay > 0 ? (
+                        <>
+                            <PreviewRow label="Regular Pay" value={regularPay} />
+                            {overtimePay > 0 && <PreviewRow label="Overtime Pay" value={overtimePay} />}
+                            <PreviewRow label="Gross Pay" value={grossPay} isBold className="border-t pt-1.5" />
+                        </>
+                    ) : (
+                        <PreviewRow label="Gross Pay" value={grossPay} isBold />
+                    )}
+
                     <p className="text-xs font-semibold text-gray-500 pt-2">VOLUNTARY DEDUCTIONS</p>
                     {data.preTaxDeductions.map((ded, i) => {
                         const isActive = isDeductionActive(ded);

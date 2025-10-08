@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import type { PayrollFormData, PreTaxDeductionType, PostTaxDeductionType, Taxes } from '../types';
 import { calculateTaxesOnly } from '../services/geminiService';
@@ -42,6 +43,8 @@ export const initialFormData: PayrollFormData = {
     payType: 'hourly',
     rate: 0,
     hoursWorked: 40,
+    overtimeHoursWorked: 0,
+    overtimeRateMultiplier: 1.5,
     federalFilingStatus: 'single',
     federalAllowances: 1,
     // NJ
@@ -180,7 +183,8 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
 
         if (formData.payType === 'hourly') {
             if (formData.rate <= 0) newErrors.rate = "Hourly rate must be greater than zero.";
-            if (formData.hoursWorked <= 0) newErrors.hoursWorked = "Hours worked must be greater than zero.";
+            if (formData.hoursWorked <= 0) newErrors.hoursWorked = "Regular hours must be greater than zero.";
+            if (formData.overtimeHoursWorked < 0) newErrors.overtimeHoursWorked = "Overtime hours cannot be negative.";
         } else { // salary
             if (formData.rate <= 0) newErrors.rate = "Annual salary must be greater than zero.";
         }
@@ -199,7 +203,7 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
     }, [data]);
 
     const TAX_AFFECTING_FIELDS = [
-      'employeeType', 'state', 'payFrequency', 'payType', 'rate', 'hoursWorked',
+      'employeeType', 'state', 'payFrequency', 'payType', 'rate', 'hoursWorked', 'overtimeHoursWorked', 'overtimeRateMultiplier',
       'federalFilingStatus', 'federalAllowances', 'stateFilingStatus', 'stateAllowances',
       'njExemptSuiSdi', 'njExemptFli', 'njExemptStateTax', 'nyStateFilingStatus',
       'nyStateAllowances', 'nyPflWaiver', 'nyExemptStateTax', 'nyExemptSdi',
@@ -283,6 +287,7 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
          if (name === 'payType') {
             newFormData.rate = 0;
             newFormData.hoursWorked = value === 'hourly' ? 40 : 0;
+            newFormData.overtimeHoursWorked = 0;
         }
          if (name === 'state') {
             // Reset all state-specific fields when changing state to their defaults
@@ -440,10 +445,14 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                 {data.payType === 'hourly' ? (
                      <>
                         <Input label="Hourly Rate ($)" id="rate" name="rate" type="number" min="0" step="0.01" value={data.rate} onChange={handleChange} required error={errors.rate} />
-                        <Input label="Hours Worked" id="hoursWorked" name="hoursWorked" type="number" min="0" step="0.1" value={data.hoursWorked} onChange={handleChange} required error={errors.hoursWorked}/>
+                        <Input label="Regular Hours Worked" id="hoursWorked" name="hoursWorked" type="number" min="0" step="0.1" value={data.hoursWorked} onChange={handleChange} required error={errors.hoursWorked}/>
+                        <Input label="Overtime Hours Worked" id="overtimeHoursWorked" name="overtimeHoursWorked" type="number" min="0" step="0.1" value={data.overtimeHoursWorked} onChange={handleChange} error={errors.overtimeHoursWorked}/>
+                        <Input label="Overtime Rate Multiplier" id="overtimeRateMultiplier" name="overtimeRateMultiplier" type="number" min="1" step="0.1" value={data.overtimeRateMultiplier} onChange={handleChange}/>
                      </>
                 ) : (
-                    <Input label="Annual Salary ($)" id="rate" name="rate" type="number" min="0" step="100" value={data.rate} onChange={handleChange} required error={errors.rate}/>
+                    <div className="md:col-span-2">
+                        <Input label="Annual Salary ($)" id="rate" name="rate" type="number" min="0" step="100" value={data.rate} onChange={handleChange} required error={errors.rate}/>
+                    </div>
                 )}
             </Section>
 

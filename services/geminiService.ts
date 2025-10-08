@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from '../types';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
@@ -167,7 +168,9 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - Pay Frequency: ${formData.payFrequency}
       - Pay Type: ${formData.payType}
       - Rate: $${formData.rate} ${formData.payType === 'hourly' ? '/hour' : '/year'}
-      - Hours Worked: ${formData.payType === 'hourly' ? formData.hoursWorked : 'N/A (Salaried)'}
+      - Regular Hours Worked: ${formData.payType === 'hourly' ? formData.hoursWorked : 'N/A (Salaried)'}
+      - Overtime Hours Worked: ${formData.payType === 'hourly' && formData.overtimeHoursWorked > 0 ? formData.overtimeHoursWorked : 'N/A'}
+      - Overtime Rate Multiplier: ${formData.payType === 'hourly' && formData.overtimeHoursWorked > 0 ? formData.overtimeRateMultiplier : 'N/A'}
       - Federal Filing Status: ${formData.employeeType === 'employee' ? formData.federalFilingStatus : 'N/A'}
       - Federal Allowances: ${formData.employeeType === 'employee' ? formData.federalAllowances : 'N/A'}
       - NJ State Filing Status: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.stateFilingStatus : 'N/A'}
@@ -224,15 +227,17 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - Taxable Income: For all taxes, the taxable income is the Gross Pay for the period MINUS the total of all *applicable* pre-tax deductions. This is a critical step.
 
       Calculation Steps:
-      1. Calculate Gross Pay for the current period. For salaried employees, the provided rate is the annual salary; you must divide this by the correct number of pay periods per year to determine the gross pay for this period (Weekly: 52, Bi-weekly: 26, Semi-monthly: 24, Monthly: 12). For hourly employees, gross pay is rate * hours worked.
-      2. Determine which pre-tax deductions apply to this pay period based on their recurring schedule and the period end date ('${formData.payPeriodEnd}').
-      3. If the worker type is 'contractor', set all fields in the 'taxes' object to 0.
-      4. If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
-      5. All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
-      6. For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
-      7. For New York: If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
-      8. For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
-      9. For California: Calculate CA state income tax and SDI. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
+      1.  Calculate Gross Pay for the current period.
+          - For salaried employees, the provided rate is the annual salary; divide this by the correct number of pay periods per year to determine the gross pay for this period (Weekly: 52, Bi-weekly: 26, Semi-monthly: 24, Monthly: 12). The 'earnings' array should contain one object with the description 'Salary'.
+          - For hourly employees, gross pay is (Regular Hours * Rate) + (Overtime Hours * Rate * Overtime Rate Multiplier). The 'earnings' array must contain separate objects for regular and overtime pay if overtime exists. The description for each should be 'Regular Pay' and 'Overtime Pay' respectively. The 'rate' in the overtime earnings object should be the calculated overtime rate (regular rate * multiplier). If there are no overtime hours, the 'earnings' array should only contain one object for regular pay.
+      2.  Determine which pre-tax deductions apply to this pay period based on their recurring schedule and the period end date ('${formData.payPeriodEnd}').
+      3.  If the worker type is 'contractor', set all fields in the 'taxes' object to 0.
+      4.  If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
+      5.  All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
+      6.  For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
+      7.  For New York: If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
+      8.  For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
+      9.  For California: Calculate CA state income tax and SDI. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
       10. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
       11. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
       12. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
