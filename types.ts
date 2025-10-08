@@ -33,6 +33,7 @@ export interface PayrollFormData {
   // NY
   nyStateFilingStatus: 'single' | 'married' | 'head_of_household'; // NY specific filing statuses
   nyStateAllowances: number; // NY allowances
+  nyAdditionalWithholding: number;
   nyPflWaiver: boolean;
   nyExemptStateTax: boolean;
   nyExemptSdi: boolean;
@@ -46,6 +47,8 @@ export interface PayrollFormData {
   // CA
   caFilingStatus: 'single_or_married_one_income' | 'married_two_incomes' | 'head_of_household';
   caAllowances: number;
+  caEstimatedDeductions: number;
+  caEstimatedNonWageIncome: number;
   caAdditionalWithholding: number;
   caExemptStateTax: boolean;
   caExemptSdi: boolean;

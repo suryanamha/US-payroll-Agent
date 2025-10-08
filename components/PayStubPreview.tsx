@@ -39,7 +39,7 @@ export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData
 
     const grossPay = calculateGrossPay();
     const regularPay = data.payType === 'hourly' ? data.rate * data.hoursWorked : 0;
-    const overtimePay = data.payType === 'hourly' ? data.overtimeHoursWorked * data.rate * data.overtimeRateMultiplier : 0;
+    const overtimePay = data.payType === 'hourly' && data.overtimeRateMultiplier >= 1 ? data.overtimeHoursWorked * data.rate * data.overtimeRateMultiplier : 0;
     
     const payPeriodEndDate = data.payPeriodEnd;
 

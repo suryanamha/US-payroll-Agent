@@ -180,6 +180,7 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - NJ Exempt FLI: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.njExemptFli : 'N/A'}
       - NY State Filing Status: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyStateFilingStatus : 'N/A'}
       - NY State Allowances: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyStateAllowances : 'N/A'}
+      - NY Additional Withholding: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyAdditionalWithholding : 'N/A'}
       - NY Exempt State Tax: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyExemptStateTax : 'N/A'}
       - NY Exempt SDI: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyExemptSdi : 'N/A'}
       - NY PFL Waiver: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyPflWaiver : 'N/A'}
@@ -191,6 +192,8 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - IN Exempt County Tax: ${formData.state === 'IN' && formData.employeeType === 'employee' ? formData.inExemptCountyTax : 'N/A'}
       - CA State Filing Status: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caFilingStatus : 'N/A'}
       - CA State Allowances: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caAllowances : 'N/A'}
+      - CA Estimated Deductions: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caEstimatedDeductions : 'N/A'}
+      - CA Estimated Non-Wage Income: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caEstimatedNonWageIncome : 'N/A'}
       - CA Additional Withholding: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caAdditionalWithholding : 'N/A'}
       - CA Exempt State Tax: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caExemptStateTax : 'N/A'}
       - CA Exempt SDI: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caExemptSdi : 'N/A'}
@@ -235,9 +238,9 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       4.  If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
       5.  All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
       6.  For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
-      7.  For New York: If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
+      7.  For New York: Calculate NY state income tax, NYSDI, and NYPFL. The \`nyAdditionalWithholding\` amount should be added to the calculated state income tax. If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
       8.  For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
-      9.  For California: Calculate CA state income tax and SDI. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
+      9.  For California: Calculate CA state income tax and SDI. Use the allowances, estimated deductions, estimated non-wage income, and additional withholding to determine the final state income tax amount. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
       10. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
       11. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
       12. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.

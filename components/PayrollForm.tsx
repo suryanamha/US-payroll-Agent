@@ -1,8 +1,10 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import type { PayrollFormData, PreTaxDeductionType, PostTaxDeductionType, Taxes } from '../types';
 import { calculateTaxesOnly } from '../services/geminiService';
+import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
 
 
 interface PayrollFormProps {
@@ -32,6 +34,14 @@ const SUPPORTED_STATES = [
 const PRE_TAX_DEDUCTION_TYPES: PreTaxDeductionType[] = ['Health Insurance', 'Dental Insurance', 'Vision Insurance', '401(k) / 403(b)', 'HSA Contribution', 'FSA Contribution', 'Other'];
 const POST_TAX_DEDUCTION_TYPES: PostTaxDeductionType[] = ['Garnishment', 'Roth IRA', 'Union Dues', 'Charitable Donation', 'Other'];
 
+const indianaCountyOptions = [{ value: '', label: 'Select a county' }].concat(
+    Object.keys(INDIANA_COUNTY_TAX_RATES)
+        .sort()
+        .map(county => ({
+            value: county,
+            label: county.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+        }))
+);
 
 export const initialFormData: PayrollFormData = {
     employeeName: '',
@@ -56,6 +66,7 @@ export const initialFormData: PayrollFormData = {
     // NY
     nyStateFilingStatus: 'single',
     nyStateAllowances: 1,
+    nyAdditionalWithholding: 0,
     nyPflWaiver: false,
     nyExemptStateTax: false,
     nyExemptSdi: false,
@@ -69,6 +80,8 @@ export const initialFormData: PayrollFormData = {
     // CA
     caFilingStatus: 'single_or_married_one_income',
     caAllowances: 1,
+    caEstimatedDeductions: 0,
+    caEstimatedNonWageIncome: 0,
     caAdditionalWithholding: 0,
     caExemptStateTax: false,
     caExemptSdi: false,
@@ -146,12 +159,13 @@ const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: str
     </div>
 );
 
-const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string }> = ({ label, children, ...props }) => (
+const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string, error?: string }> = ({ label, error, children, ...props }) => (
      <div>
         <label htmlFor={props.id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-        <select {...props} className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed">
+        <select {...props} className={`block w-full px-3 py-2 bg-white border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed`}>
             {children}
         </select>
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
 );
 
@@ -180,11 +194,21 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
             if (formData.inStateExemptions < 0) newErrors.inStateExemptions = "Personal exemptions cannot be negative.";
             if (formData.inDependentExemptions < 0) newErrors.inDependentExemptions = "Dependent exemptions cannot be negative.";
         }
+        
+        if (formData.state === 'NY') {
+            if (formData.nyAdditionalWithholding < 0) newErrors.nyAdditionalWithholding = "Cannot be negative.";
+        }
+        if (formData.state === 'CA') {
+            if (formData.caEstimatedDeductions < 0) newErrors.caEstimatedDeductions = "Cannot be negative.";
+            if (formData.caEstimatedNonWageIncome < 0) newErrors.caEstimatedNonWageIncome = "Cannot be negative.";
+        }
+
 
         if (formData.payType === 'hourly') {
             if (formData.rate <= 0) newErrors.rate = "Hourly rate must be greater than zero.";
             if (formData.hoursWorked <= 0) newErrors.hoursWorked = "Regular hours must be greater than zero.";
             if (formData.overtimeHoursWorked < 0) newErrors.overtimeHoursWorked = "Overtime hours cannot be negative.";
+            if (formData.overtimeRateMultiplier < 1) newErrors.overtimeRateMultiplier = "Multiplier must be at least 1.";
         } else { // salary
             if (formData.rate <= 0) newErrors.rate = "Annual salary must be greater than zero.";
         }
@@ -206,10 +230,10 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
       'employeeType', 'state', 'payFrequency', 'payType', 'rate', 'hoursWorked', 'overtimeHoursWorked', 'overtimeRateMultiplier',
       'federalFilingStatus', 'federalAllowances', 'stateFilingStatus', 'stateAllowances',
       'njExemptSuiSdi', 'njExemptFli', 'njExemptStateTax', 'nyStateFilingStatus',
-      'nyStateAllowances', 'nyPflWaiver', 'nyExemptStateTax', 'nyExemptSdi',
+      'nyStateAllowances', 'nyAdditionalWithholding', 'nyPflWaiver', 'nyExemptStateTax', 'nyExemptSdi',
       'inCountyOfResidence', 'inCountyOfWork', 'inStateExemptions', 'inDependentExemptions',
       'inExemptStateTax', 'inExemptCountyTax', 'caFilingStatus', 'caAllowances',
-      'caAdditionalWithholding', 'caExemptStateTax', 'caExemptSdi', 'orFilingStatus',
+      'caEstimatedDeductions', 'caEstimatedNonWageIncome', 'caAdditionalWithholding', 'caExemptStateTax', 'caExemptSdi', 'orFilingStatus',
       'orAllowances', 'orAdditionalWithholding', 'orExempt', 'deFilingStatus',
       'deAllowances', 'deExemptStateTax', 'dcFilingStatus', 'dcAllowances',
       'dcExemptStateTax', 'alFilingStatus', 'alDependents', 'alExemptStateTax',
@@ -252,6 +276,7 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
             newFormData.nyStateFilingStatus = 'single';
             newFormData.stateAllowances = 0;
             newFormData.nyStateAllowances = 0;
+            newFormData.nyAdditionalWithholding = 0;
             newFormData.njExemptSuiSdi = false;
             newFormData.njExemptFli = false;
             newFormData.njExemptStateTax = false;
@@ -264,6 +289,8 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
             newFormData.inExemptCountyTax = false;
             newFormData.caAllowances = 0;
             newFormData.caAdditionalWithholding = 0;
+            newFormData.caEstimatedDeductions = 0;
+            newFormData.caEstimatedNonWageIncome = 0;
             newFormData.caExemptStateTax = false;
             newFormData.caExemptSdi = false;
             newFormData.orAllowances = 0;
@@ -300,6 +327,7 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
             
             newFormData.nyStateFilingStatus = resetState.nyStateFilingStatus;
             newFormData.nyStateAllowances = resetState.nyStateAllowances;
+            newFormData.nyAdditionalWithholding = resetState.nyAdditionalWithholding;
             newFormData.nyPflWaiver = resetState.nyPflWaiver;
             newFormData.nyExemptStateTax = resetState.nyExemptStateTax;
             newFormData.nyExemptSdi = resetState.nyExemptSdi;
@@ -313,6 +341,8 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
 
             newFormData.caFilingStatus = resetState.caFilingStatus;
             newFormData.caAllowances = resetState.caAllowances;
+            newFormData.caEstimatedDeductions = resetState.caEstimatedDeductions;
+            newFormData.caEstimatedNonWageIncome = resetState.caEstimatedNonWageIncome;
             newFormData.caAdditionalWithholding = resetState.caAdditionalWithholding;
             newFormData.caExemptStateTax = resetState.caExemptStateTax;
             newFormData.caExemptSdi = resetState.caExemptSdi;
@@ -447,7 +477,7 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                         <Input label="Hourly Rate ($)" id="rate" name="rate" type="number" min="0" step="0.01" value={data.rate} onChange={handleChange} required error={errors.rate} />
                         <Input label="Regular Hours Worked" id="hoursWorked" name="hoursWorked" type="number" min="0" step="0.1" value={data.hoursWorked} onChange={handleChange} required error={errors.hoursWorked}/>
                         <Input label="Overtime Hours Worked" id="overtimeHoursWorked" name="overtimeHoursWorked" type="number" min="0" step="0.1" value={data.overtimeHoursWorked} onChange={handleChange} error={errors.overtimeHoursWorked}/>
-                        <Input label="Overtime Rate Multiplier" id="overtimeRateMultiplier" name="overtimeRateMultiplier" type="number" min="1" step="0.1" value={data.overtimeRateMultiplier} onChange={handleChange}/>
+                        <Input label="Overtime Rate Multiplier" id="overtimeRateMultiplier" name="overtimeRateMultiplier" type="number" min="1" step="0.1" value={data.overtimeRateMultiplier} onChange={handleChange} error={errors.overtimeRateMultiplier}/>
                      </>
                 ) : (
                     <div className="md:col-span-2">
@@ -473,14 +503,14 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                 {data.state === 'AK' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Alaska does not have a state income tax, so no state-level withholding information is required.</p></div>)}
                 {data.state === 'AZ' && (<><Select label="AZ Withholding Rate (%)" id="azWithholdingRate" name="azWithholdingRate" value={data.azWithholdingRate} onChange={handleChange} disabled={isContractor}><option value="0.5">0.5%</option><option value="1.0">1.0%</option><option value="1.5">1.5%</option><option value="2.0">2.0%</option><option value="2.5">2.5%</option><option value="3.0">3.0%</option><option value="3.5">3.5%</option></Select><div className="md:col-span-1"></div><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">AZ Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="azExemptStateTax" name="azExemptStateTax" checked={data.azExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'AR' && (<><Input label="AR Allowances (Form AR4EC)" id="arAllowances" name="arAllowances" type="number" min="0" value={data.arAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-1"></div><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">AR Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="arExemptStateTax" name="arExemptStateTax" checked={data.arExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'CA' && (<><Select label="CA State Filing Status" id="caFilingStatus" name="caFilingStatus" value={data.caFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single_or_married_one_income">Single, or Married (with one income)</option><option value="married_two_incomes">Married (with two or more incomes)</option><option value="head_of_household">Head of Household</option></Select><Input label="CA State Allowances (Form DE 4)" id="caAllowances" name="caAllowances" type="number" min="0" value={data.caAllowances} onChange={handleChange} disabled={isContractor} /><Input label="CA Additional Withholding ($)" id="caAdditionalWithholding" name="caAdditionalWithholding" type="number" min="0" step="0.01" value={data.caAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">CA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="caExemptStateTax" name="caExemptStateTax" checked={data.caExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from State Disability (SDI)" id="caExemptSdi" name="caExemptSdi" checked={data.caExemptSdi} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'CA' && (<><Select label="CA State Filing Status" id="caFilingStatus" name="caFilingStatus" value={data.caFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single_or_married_one_income">Single, or Married (with one income)</option><option value="married_two_incomes">Married (with two or more incomes)</option><option value="head_of_household">Head of Household</option></Select><Input label="CA State Allowances (Form DE 4)" id="caAllowances" name="caAllowances" type="number" min="0" value={data.caAllowances} onChange={handleChange} disabled={isContractor} /><Input label="CA Estimated Deductions ($)" id="caEstimatedDeductions" name="caEstimatedDeductions" type="number" min="0" step="0.01" value={data.caEstimatedDeductions} onChange={handleChange} disabled={isContractor} error={errors.caEstimatedDeductions} /><Input label="CA Est. Non-Wage Income ($)" id="caEstimatedNonWageIncome" name="caEstimatedNonWageIncome" type="number" min="0" step="0.01" value={data.caEstimatedNonWageIncome} onChange={handleChange} disabled={isContractor} error={errors.caEstimatedNonWageIncome} /><Input label="CA Additional Withholding ($)" id="caAdditionalWithholding" name="caAdditionalWithholding" type="number" min="0" step="0.01" value={data.caAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">CA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="caExemptStateTax" name="caExemptStateTax" checked={data.caExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from State Disability (SDI)" id="caExemptSdi" name="caExemptSdi" checked={data.caExemptSdi} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'DE' && (<><Select label="DE State Filing Status" id="deFilingStatus" name="deFilingStatus" value={data.deFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="DE State Allowances" id="deAllowances" name="deAllowances" type="number" min="0" value={data.deAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">DE Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="deExemptStateTax" name="deExemptStateTax" checked={data.deExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'DC' && (<><Select label="DC Filing Status" id="dcFilingStatus" name="dcFilingStatus" value={data.dcFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single_head_of_household">Single or Head of Household</option><option value="married_jointly">Married/Registered domestic partner filing jointly</option><option value="married_separately">Married/Registered domestic partner filing separately</option></Select><Input label="DC Allowances (Form D-4)" id="dcAllowances" name="dcAllowances" type="number" min="0" value={data.dcAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">DC Tax Exemptions</h4><Checkbox label="Exempt from DC Income Tax" id="dcExemptStateTax" name="dcExemptStateTax" checked={data.dcExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'FL' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Florida does not have a state income tax, so no state-level withholding information is required.</p></div>)}
                 {data.state === 'GA' && (<><Select label="GA State Filing Status" id="gaFilingStatus" name="gaFilingStatus" value={data.gaFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married_joint_or_hoh">Married Filing Jointly or Head of Household</option><option value="married_separate">Married Filing Separate</option></Select><Input label="GA Dependent Allowances (G-4)" id="gaDependentAllowances" name="gaDependentAllowances" type="number" min="0" value={data.gaDependentAllowances} onChange={handleChange} disabled={isContractor} /><Input label="GA Additional Allowances (G-4)" id="gaAdditionalAllowances" name="gaAdditionalAllowances" type="number" min="0" value={data.gaAdditionalAllowances} onChange={handleChange} disabled={isContractor} /><Input label="GA Additional Withholding ($)" id="gaAdditionalWithholding" name="gaAdditionalWithholding" type="number" min="0" step="0.01" value={data.gaAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">GA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="gaExemptStateTax" name="gaExemptStateTax" checked={data.gaExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'IN' && (<><Input label="County of Residence" id="inCountyOfResidence" name="inCountyOfResidence" type="text" placeholder="e.g., Marion" value={data.inCountyOfResidence} onChange={handleChange} disabled={isContractor} error={errors.inCountyOfResidence}/><Input label="County of Work" id="inCountyOfWork" name="inCountyOfWork" type="text" placeholder="e.g., Hamilton" value={data.inCountyOfWork} onChange={handleChange} disabled={isContractor} error={errors.inCountyOfWork}/><Input label="IN Personal Exemptions (Form WH-4)" id="inStateExemptions" name="inStateExemptions" type="number" min="0" value={data.inStateExemptions} onChange={handleChange} disabled={isContractor} error={errors.inStateExemptions} /><Input label="IN Dependent Exemptions (Form WH-4)" id="inDependentExemptions" name="inDependentExemptions" type="number" min="0" value={data.inDependentExemptions} onChange={handleChange} disabled={isContractor} error={errors.inDependentExemptions} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">IN Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="inExemptStateTax" name="inExemptStateTax" checked={data.inExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from County Income Tax" id="inExemptCountyTax" name="inExemptCountyTax" checked={data.inExemptCountyTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'IN' && (<><Select label="County of Residence" id="inCountyOfResidence" name="inCountyOfResidence" value={data.inCountyOfResidence} onChange={handleChange} disabled={isContractor} error={errors.inCountyOfResidence}>{indianaCountyOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</Select><Select label="County of Work" id="inCountyOfWork" name="inCountyOfWork" value={data.inCountyOfWork} onChange={handleChange} disabled={isContractor} error={errors.inCountyOfWork}>{indianaCountyOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</Select><Input label="IN Personal Exemptions (Form WH-4)" id="inStateExemptions" name="inStateExemptions" type="number" min="0" value={data.inStateExemptions} onChange={handleChange} disabled={isContractor} error={errors.inStateExemptions} /><Input label="IN Dependent Exemptions (Form WH-4)" id="inDependentExemptions" name="inDependentExemptions" type="number" min="0" value={data.inDependentExemptions} onChange={handleChange} disabled={isContractor} error={errors.inDependentExemptions} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">IN Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="inExemptStateTax" name="inExemptStateTax" checked={data.inExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from County Income Tax" id="inExemptCountyTax" name="inExemptCountyTax" checked={data.inExemptCountyTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'NJ' && (<><Select label="NJ State Filing Status" id="stateFilingStatus" name="stateFilingStatus" value={data.stateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="A">A (Single)</option><option value="B">B (Married/Civil Union, Separate)</option><option value="C">C (Married/Civil Union, Joint)</option><option value="D">D (Head of Household)</option><option value="E">E (Surviving Spouse/Civil Union)</option></Select><Input label="NJ State Allowances" id="stateAllowances" name="stateAllowances" type="number" min="0" value={data.stateAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NJ Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="njExemptStateTax" name="njExemptStateTax" checked={data.njExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from SUI/SDI (e.g., family employment)" id="njExemptSuiSdi" name="njExemptSuiSdi" checked={data.njExemptSuiSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from Family Leave Insurance (FLI)" id="njExemptFli" name="njExemptFli" checked={data.njExemptFli} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'NY' && (<><Select label="NY State Filing Status" id="nyStateFilingStatus" name="nyStateFilingStatus" value={data.nyStateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="NY State Allowances" id="nyStateAllowances" name="nyStateAllowances" type="number" min="0" value={data.nyStateAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NY Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="nyExemptStateTax" name="nyExemptStateTax" checked={data.nyExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from State Disability Insurance (NYSDI)" id="nyExemptSdi" name="nyExemptSdi" checked={data.nyExemptSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Employee has a waiver for Paid Family Leave (PFL)" id="nyPflWaiver" name="nyPflWaiver" checked={data.nyPflWaiver} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'NY' && (<><Select label="NY State Filing Status" id="nyStateFilingStatus" name="nyStateFilingStatus" value={data.nyStateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="NY State Allowances" id="nyStateAllowances" name="nyStateAllowances" type="number" min="0" value={data.nyStateAllowances} onChange={handleChange} disabled={isContractor} /><Input label="NY Additional Withholding ($)" id="nyAdditionalWithholding" name="nyAdditionalWithholding" type="number" min="0" step="0.01" value={data.nyAdditionalWithholding} onChange={handleChange} disabled={isContractor} error={errors.nyAdditionalWithholding} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NY Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="nyExemptStateTax" name="nyExemptStateTax" checked={data.nyExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from State Disability Insurance (NYSDI)" id="nyExemptSdi" name="nyExemptSdi" checked={data.nyExemptSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Employee has a waiver for Paid Family Leave (PFL)" id="nyPflWaiver" name="nyPflWaiver" checked={data.nyPflWaiver} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'OR' && (<><Select label="OR State Filing Status" id="orFilingStatus" name="orFilingStatus" value={data.orFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="married_separately">Married Filing Separately</option></Select><Input label="OR State Allowances (Form OR-W-4)" id="orAllowances" name="orAllowances" type="number" min="0" value={data.orAllowances} onChange={handleChange} disabled={isContractor} /><Input label="OR Additional Withholding ($)" id="orAdditionalWithholding" name="orAdditionalWithholding" type="number" min="0" step="0.01" value={data.orAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">OR Tax Exemptions</h4><Checkbox label="Claim exemption from state income tax" id="orExempt" name="orExempt" checked={data.orExempt} onChange={handleChange} disabled={isContractor} /></div></>)}
             </Section>
 
