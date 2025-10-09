@@ -1,5 +1,6 @@
 
 
+
 import React from 'react';
 import type { PayrollFormData, Taxes } from '../types';
 
@@ -17,24 +18,23 @@ const PreviewRow: React.FC<{ label: string; value: string | number; isBold?: boo
 export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData, suggestedTaxes: Taxes | null }) {
 
     const calculateGrossPay = (): number => {
-        if (!data || data.rate <= 0) return 0;
-
-        if (data.payType === 'hourly') {
-             const regularPay = data.rate * data.hoursWorked;
-            const overtimePay = data.overtimeHoursWorked * data.rate * data.overtimeRateMultiplier;
-            return regularPay + overtimePay;
-        }
-
-        if (data.payType === 'salary') {
-            switch (data.payFrequency) {
-                case 'weekly': return data.rate / 52;
-                case 'bi-weekly': return data.rate / 26;
-                case 'semi-monthly': return data.rate / 24;
-                case 'monthly': return data.rate / 12;
-                default: return 0;
+        let earnings = 0;
+        if (data && data.rate > 0) {
+            if (data.payType === 'hourly') {
+                const regularPay = data.rate * data.hoursWorked;
+                const overtimePay = data.overtimeHoursWorked * data.rate * data.overtimeRateMultiplier;
+                earnings = regularPay + overtimePay;
+            } else if (data.payType === 'salary') {
+                switch (data.payFrequency) {
+                    case 'weekly': earnings = data.rate / 52; break;
+                    case 'bi-weekly': earnings = data.rate / 26; break;
+                    case 'semi-monthly': earnings = data.rate / 24; break;
+                    case 'monthly': earnings = data.rate / 12; break;
+                    default: earnings = 0;
+                }
             }
         }
-        return 0;
+        return earnings + (data.bonus || 0);
     };
 
     const grossPay = calculateGrossPay();
@@ -85,15 +85,12 @@ export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData
                     <PreviewRow label="Employee" value={data.employeeName || '...'} />
                     <hr className="my-2"/>
                     
-                    {data.payType === 'hourly' && grossPay > 0 ? (
-                        <>
-                            <PreviewRow label="Regular Pay" value={regularPay} />
-                            {overtimePay > 0 && <PreviewRow label="Overtime Pay" value={overtimePay} />}
-                            <PreviewRow label="Gross Pay" value={grossPay} isBold className="border-t pt-1.5" />
-                        </>
-                    ) : (
-                        <PreviewRow label="Gross Pay" value={grossPay} isBold />
-                    )}
+                    {data.payType === 'hourly' && regularPay > 0 && <PreviewRow label="Regular Pay" value={regularPay} />}
+                    {data.payType === 'hourly' && overtimePay > 0 && <PreviewRow label="Overtime Pay" value={overtimePay} />}
+                    {data.payType === 'salary' && (grossPay - (data.bonus || 0)) > 0 && <PreviewRow label="Salary" value={grossPay - (data.bonus || 0)} />}
+                    {data.bonus > 0 && <PreviewRow label="Bonus" value={data.bonus} />}
+
+                    <PreviewRow label="Gross Pay" value={grossPay} isBold className="border-t pt-1.5" />
 
                     <p className="text-xs font-semibold text-gray-500 pt-2">VOLUNTARY DEDUCTIONS</p>
                     {data.preTaxDeductions.map((ded, i) => {

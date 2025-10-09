@@ -22,6 +22,7 @@ export interface PayrollFormData {
   hoursWorked: number;
   overtimeHoursWorked: number;
   overtimeRateMultiplier: number;
+  bonus: number;
   federalFilingStatus: 'single' | 'married_jointly' | 'married_separately' | 'head_of_household';
   federalAllowances: number;
   // NJ

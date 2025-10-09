@@ -1,5 +1,6 @@
 
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from '../types';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
@@ -171,6 +172,7 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - Regular Hours Worked: ${formData.payType === 'hourly' ? formData.hoursWorked : 'N/A (Salaried)'}
       - Overtime Hours Worked: ${formData.payType === 'hourly' && formData.overtimeHoursWorked > 0 ? formData.overtimeHoursWorked : 'N/A'}
       - Overtime Rate Multiplier: ${formData.payType === 'hourly' && formData.overtimeHoursWorked > 0 ? formData.overtimeRateMultiplier : 'N/A'}
+      - Bonus: $${formData.bonus > 0 ? formData.bonus : 'N/A'}
       - Federal Filing Status: ${formData.employeeType === 'employee' ? formData.federalFilingStatus : 'N/A'}
       - Federal Allowances: ${formData.employeeType === 'employee' ? formData.federalAllowances : 'N/A'}
       - NJ State Filing Status: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.stateFilingStatus : 'N/A'}
@@ -230,26 +232,28 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - Taxable Income: For all taxes, the taxable income is the Gross Pay for the period MINUS the total of all *applicable* pre-tax deductions. This is a critical step.
 
       Calculation Steps:
-      1.  Calculate Gross Pay for the current period.
-          - For salaried employees, the provided rate is the annual salary; divide this by the correct number of pay periods per year to determine the gross pay for this period (Weekly: 52, Bi-weekly: 26, Semi-monthly: 24, Monthly: 12). The 'earnings' array should contain one object with the description 'Salary'.
-          - For hourly employees, gross pay is (Regular Hours * Rate) + (Overtime Hours * Rate * Overtime Rate Multiplier). The 'earnings' array must contain separate objects for regular and overtime pay if overtime exists. The description for each should be 'Regular Pay' and 'Overtime Pay' respectively. The 'rate' in the overtime earnings object should be the calculated overtime rate (regular rate * multiplier). If there are no overtime hours, the 'earnings' array should only contain one object for regular pay.
-      2.  Determine which pre-tax deductions apply to this pay period based on their recurring schedule and the period end date ('${formData.payPeriodEnd}').
-      3.  If the worker type is 'contractor', set all fields in the 'taxes' object to 0.
-      4.  If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
-      5.  All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
-      6.  For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
-      7.  For New York: Calculate NY state income tax, NYSDI, and NYPFL. The \`nyAdditionalWithholding\` amount should be added to the calculated state income tax. If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
-      8.  For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
-      9.  For California: Calculate CA state income tax and SDI. Use the allowances, estimated deductions, estimated non-wage income, and additional withholding to determine the final state income tax amount. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
-      10. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
-      11. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
-      12. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
-      13. For Florida: \`flStateIncomeTax\` MUST be 0 as there is no state income tax.
-      14. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0.
-      15. For Alaska: \`akStateIncomeTax\` MUST be 0 as there is no state income tax.
-      16. For Arizona: If \`azExemptStateTax\` is true, \`azStateIncomeTax\` MUST be 0. Otherwise, calculate it based on the specified withholding rate.
-      17. For Arkansas: If \`arExemptStateTax\` is true, \`arStateIncomeTax\` MUST be 0.
-      18. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0.
+      1.  Calculate Gross Pay for the current period. The Gross Pay is the sum of all earnings (Salary/Regular/Overtime + Bonus). If a bonus of more than $0 is provided, it MUST be added to the gross pay.
+      2.  Construct the 'earnings' array based on the pay type.
+          - For salaried employees, the provided rate is the annual salary; divide this by the correct number of pay periods per year to determine the salary for this period (Weekly: 52, Bi-weekly: 26, Semi-monthly: 24, Monthly: 12). The 'earnings' array should contain one object with the description 'Salary' and its calculated amount.
+          - For hourly employees, calculate regular and overtime pay. The 'earnings' array must contain an object for 'Regular Pay'. If overtime hours were worked, it must also contain an object for 'Overtime Pay'. The 'rate' in the overtime earnings object should be the calculated overtime rate (regular rate * multiplier).
+          - If a bonus was provided and is greater than 0, the 'earnings' array MUST also include an object for it with the description 'Bonus'. The rate and hours for a Bonus earning should be 0.
+      3.  Determine which pre-tax deductions apply to this pay period based on their recurring schedule and the period end date ('${formData.payPeriodEnd}').
+      4.  If the worker type is 'contractor', set all fields in the 'taxes' object to 0.
+      5.  If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
+      6.  All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
+      7.  For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
+      8.  For New York: Calculate NY state income tax, NYSDI, and NYPFL. The \`nyAdditionalWithholding\` amount should be added to the calculated state income tax. If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
+      9.  For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
+      10. For California: Calculate CA state income tax and SDI. Use the allowances, estimated deductions, estimated non-wage income, and additional withholding to determine the final state income tax amount. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
+      11. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
+      12. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
+      13. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
+      14. For Florida: \`flStateIncomeTax\` MUST be 0 as there is no state income tax.
+      15. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0.
+      16. For Alaska: \`akStateIncomeTax\` MUST be 0 as there is no state income tax.
+      17. For Arizona: If \`azExemptStateTax\` is true, \`azStateIncomeTax\` MUST be 0. Otherwise, calculate it based on the specified withholding rate.
+      18. For Arkansas: If \`arExemptStateTax\` is true, \`arStateIncomeTax\` MUST be 0.
+      19. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0.
     `,
         processedPreTaxDeductions,
         processedPostTaxDeductions,

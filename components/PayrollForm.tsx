@@ -55,6 +55,7 @@ export const initialFormData: PayrollFormData = {
     hoursWorked: 40,
     overtimeHoursWorked: 0,
     overtimeRateMultiplier: 1.5,
+    bonus: 0,
     federalFilingStatus: 'single',
     federalAllowances: 1,
     // NJ
@@ -213,6 +214,7 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
             if (formData.rate <= 0) newErrors.rate = "Annual salary must be greater than zero.";
         }
         
+        if (formData.bonus < 0) newErrors.bonus = "Bonus cannot be negative.";
         if (formData.grossPayYTD < 0) newErrors.grossPayYTD = "YTD Gross Pay cannot be negative.";
         if (formData.totalDeductionsYTD < 0) newErrors.totalDeductionsYTD = "YTD Deductions cannot be negative.";
         if (formData.netPayYTD < 0) newErrors.netPayYTD = "YTD Net Pay cannot be negative.";
@@ -227,7 +229,7 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
     }, [data]);
 
     const TAX_AFFECTING_FIELDS = [
-      'employeeType', 'state', 'payFrequency', 'payType', 'rate', 'hoursWorked', 'overtimeHoursWorked', 'overtimeRateMultiplier',
+      'employeeType', 'state', 'payFrequency', 'payType', 'rate', 'hoursWorked', 'overtimeHoursWorked', 'overtimeRateMultiplier', 'bonus',
       'federalFilingStatus', 'federalAllowances', 'stateFilingStatus', 'stateAllowances',
       'njExemptSuiSdi', 'njExemptFli', 'njExemptStateTax', 'nyStateFilingStatus',
       'nyStateAllowances', 'nyAdditionalWithholding', 'nyPflWaiver', 'nyExemptStateTax', 'nyExemptSdi',
@@ -271,6 +273,7 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
         if (name === 'employeeType' && value === 'contractor') {
             newFormData.federalFilingStatus = 'single';
             newFormData.federalAllowances = 0;
+            newFormData.bonus = 0;
             // Reset all state specific fields
             newFormData.stateFilingStatus = 'B';
             newFormData.nyStateFilingStatus = 'single';
@@ -422,8 +425,8 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
             setSuggestionError('Tax suggestions are not applicable for contractors.');
             return;
         }
-        if (data.rate <= 0 || (data.payType === 'hourly' && data.hoursWorked <= 0)) {
-            setSuggestionError('Please enter a valid rate and hours/salary to calculate taxes.');
+        if (data.rate <= 0 && data.bonus <= 0) {
+            setSuggestionError('Please enter a valid rate/salary or bonus to calculate taxes.');
             return;
         }
         setIsSuggesting(true);
@@ -480,10 +483,9 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                         <Input label="Overtime Rate Multiplier" id="overtimeRateMultiplier" name="overtimeRateMultiplier" type="number" min="1" step="0.1" value={data.overtimeRateMultiplier} onChange={handleChange} error={errors.overtimeRateMultiplier}/>
                      </>
                 ) : (
-                    <div className="md:col-span-2">
-                        <Input label="Annual Salary ($)" id="rate" name="rate" type="number" min="0" step="100" value={data.rate} onChange={handleChange} required error={errors.rate}/>
-                    </div>
+                    <Input label="Annual Salary ($)" id="rate" name="rate" type="number" min="0" step="100" value={data.rate} onChange={handleChange} required error={errors.rate}/>
                 )}
+                 <Input label="Bonus ($) (Optional)" id="bonus" name="bonus" type="number" min="0" step="0.01" value={data.bonus} onChange={handleChange} error={errors.bonus} />
             </Section>
 
             <Section 
