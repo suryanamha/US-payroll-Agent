@@ -13,7 +13,7 @@ export type PostTaxDeductionType = 'Garnishment' | 'Roth IRA' | 'Union Dues' | '
 export interface PayrollFormData {
   employeeName: string;
   employeeType: 'employee' | 'contractor';
-  state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY';
+  state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY' | 'OH' | 'PA' | 'MI' | 'KY';
   payPeriodStart: string;
   payPeriodEnd: string;
   payFrequency: 'weekly' | 'bi-weekly' | 'semi-monthly' | 'monthly';
@@ -35,6 +35,7 @@ export interface PayrollFormData {
   nyStateFilingStatus: 'single' | 'married' | 'head_of_household'; // NY specific filing statuses
   nyStateAllowances: number; // NY allowances
   nyAdditionalWithholding: number;
+  nyWorkCity: 'nyc' | 'yonkers' | 'none';
   nyPflWaiver: boolean;
   nyExemptStateTax: boolean;
   nyExemptSdi: boolean;
@@ -82,6 +83,26 @@ export interface PayrollFormData {
   gaAdditionalAllowances: number;
   gaAdditionalWithholding: number;
   gaExemptStateTax: boolean;
+  // OH
+  ohAllowances: number;
+  ohAdditionalWithholding: number;
+  ohExemptStateTax: boolean;
+  ohMunicipality: string;
+  // PA
+  paExemptStateTax: boolean;
+  paResidencyPsdCode: string;
+  paWorkplacePsdCode: string;
+  paIsExemptLST: boolean;
+  // MI
+  miAllowances: number;
+  miAdditionalWithholding: number;
+  miExemptStateTax: boolean;
+  miCityOfResidence: string;
+  // KY
+  kyAllowances: number;
+  kyAdditionalWithholding: number;
+  kyExemptStateTax: boolean;
+  kyWorkLocation: string;
   // Common
   preTaxDeductions: {
     type: PreTaxDeductionType;
@@ -115,6 +136,7 @@ export interface Taxes {
   njSDI: number;
   njFLI: number;
   nyStateIncomeTax: number;
+  nyLocalIncomeTax: number;
   nyDisabilityInsurance: number; // NYSDI
   nyPaidFamilyLeave: number; // NYPFL
   inStateIncomeTax: number;
@@ -135,6 +157,14 @@ export interface Taxes {
   sdStateIncomeTax: number; // Will be 0
   tnStateIncomeTax: number; // Will be 0
   wyStateIncomeTax: number; // Will be 0
+  ohStateIncomeTax: number;
+  ohLocalIncomeTax: number;
+  paStateIncomeTax: number;
+  paLocalIncomeTax: number;
+  miStateIncomeTax: number;
+  miLocalIncomeTax: number;
+  kyStateIncomeTax: number;
+  kyLocalIncomeTax: number;
 }
 
 export interface PayStubData {
@@ -142,7 +172,7 @@ export interface PayStubData {
   employeeInfo: {
     name: string;
     employeeType: 'employee' | 'contractor';
-    state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY';
+    state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY' | 'OH' | 'PA' | 'MI' | 'KY';
   };
   payPeriod: {
     startDate: string;

@@ -1,6 +1,5 @@
 
 
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from '../types';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
@@ -19,6 +18,7 @@ const taxesSchema = {
         njSDI: { type: Type.NUMBER },
         njFLI: { type: Type.NUMBER },
         nyStateIncomeTax: { type: Type.NUMBER },
+        nyLocalIncomeTax: { type: Type.NUMBER },
         nyDisabilityInsurance: { type: Type.NUMBER },
         nyPaidFamilyLeave: { type: Type.NUMBER },
         inStateIncomeTax: { type: Type.NUMBER },
@@ -39,6 +39,14 @@ const taxesSchema = {
         sdStateIncomeTax: { type: Type.NUMBER },
         tnStateIncomeTax: { type: Type.NUMBER },
         wyStateIncomeTax: { type: Type.NUMBER },
+        ohStateIncomeTax: { type: Type.NUMBER },
+        ohLocalIncomeTax: { type: Type.NUMBER },
+        paStateIncomeTax: { type: Type.NUMBER },
+        paLocalIncomeTax: { type: Type.NUMBER },
+        miStateIncomeTax: { type: Type.NUMBER },
+        miLocalIncomeTax: { type: Type.NUMBER },
+        kyStateIncomeTax: { type: Type.NUMBER },
+        kyLocalIncomeTax: { type: Type.NUMBER },
     },
 };
 
@@ -144,7 +152,7 @@ const getCountyRate = (countyName: string): number => {
 const buildBasePrompt = (formData: PayrollFormData) => {
     const residenceCountyRate = getCountyRate(formData.inCountyOfResidence);
     const workCountyRate = getCountyRate(formData.inCountyOfWork);
-    const otherStates = "NJ, FL, NY, IN, CA, OR, DE, DC, AL, AK, AZ, AR, GA, TX, NV, NH, SD, TN, WY".split(', ').filter(s => s !== formData.state).join(', ');
+    const otherStates = "NJ, FL, NY, IN, CA, OR, DE, DC, AL, AK, AZ, AR, GA, TX, NV, NH, SD, TN, WY, OH, PA, MI, KY".split(', ').filter(s => s !== formData.state).join(', ');
 
     // Pre-process deductions to create a simple name for the AI prompt.
     const processDeductions = (deductions: any[]) => {
@@ -189,6 +197,7 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - NY State Filing Status: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyStateFilingStatus : 'N/A'}
       - NY State Allowances: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyStateAllowances : 'N/A'}
       - NY Additional Withholding: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyAdditionalWithholding : 'N/A'}
+      - NY Work City: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyWorkCity : 'N/A'}
       - NY Exempt State Tax: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyExemptStateTax : 'N/A'}
       - NY Exempt SDI: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyExemptSdi : 'N/A'}
       - NY PFL Waiver: ${formData.state === 'NY' && formData.employeeType === 'employee' ? formData.nyPflWaiver : 'N/A'}
@@ -227,10 +236,29 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - GA Additional Allowances: ${formData.state === 'GA' && formData.employeeType === 'employee' ? formData.gaAdditionalAllowances : 'N/A'}
       - GA Additional Withholding: ${formData.state === 'GA' && formData.employeeType === 'employee' ? formData.gaAdditionalWithholding : 'N/A'}
       - GA Exempt State Tax: ${formData.state === 'GA' && formData.employeeType === 'employee' ? formData.gaExemptStateTax : 'N/A'}
+      - OH Allowances: ${formData.state === 'OH' && formData.employeeType === 'employee' ? formData.ohAllowances : 'N/A'}
+      - OH Additional Withholding: ${formData.state === 'OH' && formData.employeeType === 'employee' ? formData.ohAdditionalWithholding : 'N/A'}
+      - OH Exempt State Tax: ${formData.state === 'OH' && formData.employeeType === 'employee' ? formData.ohExemptStateTax : 'N/A'}
+      - OH Municipality: ${formData.state === 'OH' && formData.employeeType === 'employee' ? formData.ohMunicipality : 'N/A'}
+      - PA Exempt State Tax: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paExemptStateTax : 'N/A'}
+      - PA Residency PSD Code: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paResidencyPsdCode : 'N/A'}
+      - PA Workplace PSD Code: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paWorkplacePsdCode : 'N/A'}
+      - PA LST Exempt: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paIsExemptLST : 'N/A'}
+      - MI Allowances: ${formData.state === 'MI' && formData.employeeType === 'employee' ? formData.miAllowances : 'N/A'}
+      - MI Additional Withholding: ${formData.state === 'MI' && formData.employeeType === 'employee' ? formData.miAdditionalWithholding : 'N/A'}
+      - MI Exempt State Tax: ${formData.state === 'MI' && formData.employeeType === 'employee' ? formData.miExemptStateTax : 'N/A'}
+      - MI City of Residence: ${formData.state === 'MI' && formData.employeeType === 'employee' ? formData.miCityOfResidence : 'N/A'}
+      - KY Allowances: ${formData.state === 'KY' && formData.employeeType === 'employee' ? formData.kyAllowances : 'N/A'}
+      - KY Additional Withholding: ${formData.state === 'KY' && formData.employeeType === 'employee' ? formData.kyAdditionalWithholding : 'N/A'}
+      - KY Exempt State Tax: ${formData.state === 'KY' && formData.employeeType === 'employee' ? formData.kyExemptStateTax : 'N/A'}
+      - KY Work Location: ${formData.state === 'KY' && formData.employeeType === 'employee' ? formData.kyWorkLocation : 'N/A'}
+      // FIX: Corrected typo from processedPreTaxDuncations to processedPreTaxDeductions
       - Pre-tax Deductions: ${JSON.stringify(processedPreTaxDeductions)}
       - Post-tax Deductions: ${JSON.stringify(processedPostTaxDeductions)}
       
       Tax Calculation Guidelines (Current Year):
+      - IMPORTANT: If the worker type is 'contractor', all fields in the 'taxes' object (federalIncomeTax, socialSecurity, medicare, all state-specific taxes, etc.) MUST be 0. No tax should be withheld from a contractor.
+      - IMPORTANT: If any state-specific exemption flag (e.g., 'njExemptStateTax', 'caExemptSdi', 'paIsExemptLST', etc.) provided in the 'Worker Data' is 'true', the corresponding tax amount MUST be calculated as 0. This rule overrides all other calculation logic for that specific tax.
       - Social Security Tax: Calculate at 6.2% on gross wages up to the annual limit of $168,600.
       - Medicare Tax: Calculate at 1.45% on all gross wages. There is no wage limit.
       - Federal Income Tax: Withhold based on the employee's filing status, allowances, and the current year's federal tax brackets (progressive rates: 10%, 12%, 22%, 24%, 32%, 35%, 37%). Use the percentage method for withholding calculations.
@@ -244,28 +272,31 @@ const buildBasePrompt = (formData: PayrollFormData) => {
           - For hourly employees, calculate regular and overtime pay. The 'earnings' array must contain an object for 'Regular Pay'. If overtime hours were worked, it must also contain an object for 'Overtime Pay'. The 'rate' in the overtime earnings object should be the calculated overtime rate (regular rate * multiplier).
           - If a bonus was provided and is greater than 0, the 'earnings' array MUST also include an object for it with the description 'Bonus'. The rate and hours for a Bonus earning should be 0.
       3.  Determine which pre-tax deductions apply to this pay period based on their recurring schedule and the period end date ('${formData.payPeriodEnd}').
-      4.  If the worker type is 'contractor', set all fields in the 'taxes' object to 0.
-      5.  If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
-      6.  All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
-      7.  For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
-      8.  For New York: Calculate NY state income tax, NYSDI, and NYPFL. The \`nyAdditionalWithholding\` amount should be added to the calculated state income tax. If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
-      9.  For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
-      10. For California: Calculate CA state income tax and SDI. Use the allowances, estimated deductions, estimated non-wage income, and additional withholding to determine the final state income tax amount. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
-      11. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
-      12. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
-      13. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
-      14. For Florida: \`flStateIncomeTax\` MUST be 0 as there is no state income tax.
-      15. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0.
-      16. For Alaska: \`akStateIncomeTax\` MUST be 0 as there is no state income tax.
-      17. For Arizona: If \`azExemptStateTax\` is true, \`azStateIncomeTax\` MUST be 0. Otherwise, calculate it based on the specified withholding rate.
-      18. For Arkansas: If \`arExemptStateTax\` is true, \`arStateIncomeTax\` MUST be 0.
-      19. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0.
-      20. For Texas: \`txStateIncomeTax\` MUST be 0 as there is no state income tax.
-      21. For Nevada: \`nvStateIncomeTax\` MUST be 0 as there is no state income tax.
-      22. For New Hampshire: \`nhStateIncomeTax\` MUST be 0 as there is no state income tax on wages.
-      23. For South Dakota: \`sdStateIncomeTax\` MUST be 0 as there is no state income tax.
-      24. For Tennessee: \`tnStateIncomeTax\` MUST be 0 as there is no state income tax on wages.
-      25. For Wyoming: \`wyStateIncomeTax\` MUST be 0 as there is no state income tax.
+      4.  If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
+      5.  All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
+      6.  For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
+      7.  For New York: Calculate NY state income tax, NYSDI, and NYPFL. The \`nyAdditionalWithholding\` amount should be added to the calculated state income tax. Also, calculate \`nyLocalIncomeTax\` if \`nyWorkCity\` is 'nyc' (New York City) or 'yonkers'. Use the current tax rates for these cities. If \`nyWorkCity\` is 'none', the local tax MUST be 0. If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
+      8.  For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRate}) if available and > 0; otherwise, use the work county rate (${workCountyRate}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
+      9.  For California: Calculate CA state income tax and SDI. Use the allowances, estimated deductions, estimated non-wage income, and additional withholding to determine the final state income tax amount. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
+      10. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
+      11. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
+      12. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
+      13. For Florida: \`flStateIncomeTax\` MUST be 0 as there is no state income tax.
+      14. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0.
+      15. For Alaska: \`akStateIncomeTax\` MUST be 0 as there is no state income tax.
+      16. For Arizona: If \`azExemptStateTax\` is true, \`azStateIncomeTax\` MUST be 0. Otherwise, calculate it based on the specified withholding rate.
+      17. For Arkansas: If \`arExemptStateTax\` is true, \`arStateIncomeTax\` MUST be 0.
+      18. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0.
+      19. For Texas: \`txStateIncomeTax\` MUST be 0 as there is no state income tax.
+      20. For Nevada: \`nvStateIncomeTax\` MUST be 0 as there is no state income tax.
+      21. For New Hampshire: \`nhStateIncomeTax\` MUST be 0 as there is no state income tax on wages.
+      22. For South Dakota: \`sdStateIncomeTax\` MUST be 0 as there is no state income tax.
+      23. For Tennessee: \`tnStateIncomeTax\` MUST be 0 as there is no state income tax on wages.
+      24. For Wyoming: \`wyStateIncomeTax\` MUST be 0 as there is no state income tax.
+      25. For Ohio: If \`ohExemptStateTax\` is true, \`ohStateIncomeTax\` MUST be 0. Otherwise, calculate state tax based on progressive brackets and \`ohAllowances\`. Also calculate \`ohLocalIncomeTax\` based on the rate for the provided \`ohMunicipality\`.
+      26. For Pennsylvania: If \`paExemptStateTax\` is true, \`paStateIncomeTax\` MUST be 0. Otherwise, it is a flat 3.07% of taxable income. The \`paLocalIncomeTax\` field MUST be the sum of two components: the Local Earned Income Tax (EIT) and the Local Services Tax (LST). EIT is based on the higher of the residency or workplace rate (determined by PSD codes). LST is a flat annual fee (e.g., $52) prorated per pay period, unless \`paIsExemptLST\` is true (in which case LST component is 0).
+      27. For Michigan: If \`miExemptStateTax\` is true, \`miStateIncomeTax\` MUST be 0. Otherwise, it is a flat rate. Reduce taxable income by the exemption allowance amount multiplied by \`miAllowances\`. Additionally, if \`miCityOfResidence\` is a city with an income tax (e.g., Detroit, Grand Rapids, Flint), calculate \`miLocalIncomeTax\` based on that city's resident income tax rate. If no city is provided or it has no income tax, this MUST be 0.
+      28. For Kentucky: If \`kyExemptStateTax\` is true, \`kyStateIncomeTax\` MUST be 0. Otherwise, it is a flat rate. Apply tax credits based on \`kyAllowances\`. \`kyLocalIncomeTax\` is for local occupational taxes, which are a percentage of gross wages based on the work location provided in \`kyWorkLocation\`. Use the correct rate for the specified location.
     `,
         processedPreTaxDeductions,
         processedPostTaxDeductions,
@@ -377,6 +408,7 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
     - NY Exempt State Tax: ${formData.nyExemptStateTax}
     - NY Exempt SDI: ${formData.nyExemptSdi}
     - NY PFL Waiver: ${formData.nyPflWaiver}
+    - NY Work City: ${formData.nyWorkCity}
     - IN Exempt State Tax: ${formData.inExemptStateTax}
     - IN Exempt County Tax: ${formData.inExemptCountyTax}
     - CA Exempt State Tax: ${formData.caExemptStateTax}
@@ -388,13 +420,18 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
     - AZ Exempt State Tax: ${formData.azExemptStateTax}
     - AR Exempt State Tax: ${formData.arExemptStateTax}
     - GA Exempt State Tax: ${formData.gaExemptStateTax}
+    - OH Exempt State Tax: ${formData.ohExemptStateTax}
+    - PA Exempt State Tax: ${formData.paExemptStateTax}
+    - PA LST Exempt: ${formData.paIsExemptLST}
+    - MI Exempt State Tax: ${formData.miExemptStateTax}
+    - KY Exempt State Tax: ${formData.kyExemptStateTax}
 
     Report Guidelines:
     - Check for the presence of essential information (employee/company name, pay period, earnings, deductions, net pay).
     - For employees, confirm that tax withholdings (Federal, Social Security, Medicare, and State-specific if applicable) are listed.
     - For contractors, confirm that no taxes are withheld.
     - For New Jersey: If 'njExemptStateTax' is true, confirm 'njStateIncomeTax' is 0. If 'njExemptSuiSdi' is true, confirm 'njSUI' and 'njSDI' are 0. If 'njExemptFli' is true, confirm 'njFLI' is 0.
-    - For New York: If 'nyExemptStateTax' is true, confirm 'nyStateIncomeTax' is 0. If 'nyExemptSdi' is true, confirm 'nyDisabilityInsurance' is 0. If 'nyPflWaiver' is true, confirm 'nyPaidFamilyLeave' is 0.
+    - For New York: If 'nyExemptStateTax' is true, confirm 'nyStateIncomeTax' is 0. If 'nyExemptSdi' is true, confirm 'nyDisabilityInsurance' is 0. If 'nyPflWaiver' is true, confirm 'nyPaidFamilyLeave' is 0. If 'nyWorkCity' is 'none', confirm 'nyLocalIncomeTax' is 0.
     - For Indiana: If 'inExemptStateTax' is true, confirm 'inStateIncomeTax' is 0. If 'inExemptCountyTax' is true, confirm 'inCountyIncomeTax' is 0.
     - For California: If 'caExemptStateTax' is true, confirm 'caStateIncomeTax' is 0. If 'caExemptSdi' is true, confirm 'caSDI' is 0.
     - For Oregon: If 'orExempt' is true, confirm 'orStateIncomeTax' is 0.
@@ -412,6 +449,10 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
     - For South Dakota: Verify that 'sdStateIncomeTax' is 0.
     - For Tennessee: Verify that 'tnStateIncomeTax' is 0.
     - For Wyoming: Verify that 'wyStateIncomeTax' is 0.
+    - For Ohio: If 'ohExemptStateTax' is true, confirm 'ohStateIncomeTax' is 0.
+    - For Pennsylvania: If 'paExemptStateTax' is true, confirm 'paStateIncomeTax' is 0.
+    - For Michigan: If 'miExemptStateTax' is true, confirm 'miStateIncomeTax' is 0. Confirm 'miLocalIncomeTax' seems plausible for the given city of residence.
+    - For Kentucky: If 'kyExemptStateTax' is true, confirm 'kyStateIncomeTax' is 0. Confirm 'kyLocalIncomeTax' seems plausible for the given work location.
     - Mention if the hourly rate (if applicable) is above the state minimum wage.
     - Conclude with a general statement about overall compliance based on the visible data.
     - Format the output as clean, readable text.
@@ -436,14 +477,14 @@ export async function getRequiredForms(formData: PayrollFormData): Promise<Requi
     - Worker Type: ${formData.employeeType}
 
     Instructions:
-    1.  Identify the most common and critical forms. For an 'employee', this MUST include Form I-9, Form W-4, and the primary state tax withholding form (like NJ-W4 for New Jersey, IT-2104 for New York, WH-4 for Indiana, DE 4 for California, OR-W-4 for Oregon, W-4 DE for Delaware, D-4 for the District of Columbia, A-4 for Alabama, A-4 for Arizona, AR4EC for Arkansas, or G-4 for Georgia). For a 'contractor', the list MUST include Form W-9.
+    1.  Identify the most common and critical forms. For an 'employee', this MUST include Form I-9, Form W-4, and the primary state tax withholding form (like NJ-W4 for New Jersey, IT-2104 for New York, WH-4 for Indiana, DE 4 for California, OR-W-4 for Oregon, W-4 DE for Delaware, D-4 for the District of Columbia, A-4 for Alabama, A-4 for Arizona, AR4EC for Arkansas, G-4 for Georgia, IT 4 for Ohio, REV-419 for Pennsylvania, MI-W4 for Michigan, or K-4 for Kentucky). For a 'contractor', the list MUST include Form W-9.
     2.  If the state is Alaska, Florida, Texas, Nevada, New Hampshire, South Dakota, Tennessee, or Wyoming which have no state income tax, do not include a state tax withholding form.
     3.  For each form, provide all the requested details: formName, formId, purpose, link, pdfLink, filledBy, and category.
     4.  'link' must be the URL to the official government *information page*.
     5.  'pdfLink' must be a direct link to the fillable PDF file itself. It should end with '.pdf'.
     6.  'filledBy' must be 'Employee', 'Employer', or 'Both'.
     7.  'category' must be one of: 'Federal Onboarding', 'State Onboarding', 'Federal Tax', 'State Tax'.
-    8.  Ensure all links are to official government domains (e.g., irs.gov, uscis.gov, revenue.alabama.gov, azdor.gov, dfas.arkansas.gov, dor.georgia.gov, twc.texas.gov, etc.).
+    8.  Ensure all links are to official government domains (e.g., irs.gov, uscis.gov, revenue.alabama.gov, azdor.gov, dfas.arkansas.gov, dor.georgia.gov, twc.texas.gov, tax.ohio.gov, revenue.pa.gov, michigan.gov, revenue.ky.gov, etc.).
     9.  Return the information in a JSON array that strictly adheres to the provided schema. Do not return any extra text or explanations.
   `;
 

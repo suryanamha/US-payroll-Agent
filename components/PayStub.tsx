@@ -1,7 +1,5 @@
 
 
-
-
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import type { PayStubData } from '../types';
 
@@ -44,12 +42,16 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const isSD = employeeInfo.state === 'SD';
     const isTN = employeeInfo.state === 'TN';
     const isWY = employeeInfo.state === 'WY';
+    const isOH = employeeInfo.state === 'OH';
+    const isPA = employeeInfo.state === 'PA';
+    const isMI = employeeInfo.state === 'MI';
+    const isKY = employeeInfo.state === 'KY';
     const printContainerRef = useRef<HTMLDivElement>(null);
 
     const { taxes } = deductions;
     const totalTaxes = !isContractor && taxes ? Object.values(taxes).reduce((sum, amount) => sum + (amount || 0), 0) : 0;
     const totalNJTaxes = isNJ && taxes ? (taxes.njStateIncomeTax + taxes.njSUI + taxes.njSDI + taxes.njFLI) : 0;
-    const totalNYTaxes = isNY && taxes ? (taxes.nyStateIncomeTax + taxes.nyDisabilityInsurance + taxes.nyPaidFamilyLeave) : 0;
+    const totalNYTaxes = isNY && taxes ? (taxes.nyStateIncomeTax + taxes.nyLocalIncomeTax + taxes.nyDisabilityInsurance + taxes.nyPaidFamilyLeave) : 0;
     const totalINTaxes = isIN && taxes ? (taxes.inStateIncomeTax + taxes.inCountyIncomeTax) : 0;
     const totalCATaxes = isCA && taxes ? (taxes.caStateIncomeTax + taxes.caSDI) : 0;
     const totalORTaxes = isOR && taxes ? taxes.orStateIncomeTax : 0;
@@ -67,6 +69,11 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const totalSDTaxes = isSD && taxes ? taxes.sdStateIncomeTax : 0; // Always 0
     const totalTNTaxes = isTN && taxes ? taxes.tnStateIncomeTax : 0; // Always 0
     const totalWYTaxes = isWY && taxes ? taxes.wyStateIncomeTax : 0; // Always 0
+    const totalOHTaxes = isOH && taxes ? (taxes.ohStateIncomeTax + taxes.ohLocalIncomeTax) : 0;
+    const totalPATaxes = isPA && taxes ? (taxes.paStateIncomeTax + taxes.paLocalIncomeTax) : 0;
+    const totalMITaxes = isMI && taxes ? (taxes.miStateIncomeTax + taxes.miLocalIncomeTax) : 0;
+    const totalKYTaxes = isKY && taxes ? (taxes.kyStateIncomeTax + taxes.kyLocalIncomeTax) : 0;
+
 
     const handlePrint = () => {
         const input = printContainerRef.current;
@@ -188,6 +195,7 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
                                     <>
                                         <p className="text-xs font-semibold text-gray-500 mt-2">NEW YORK TAXES</p>
                                         <StubRow label="State Income Tax" value={-taxes.nyStateIncomeTax} />
+                                        <StubRow label="Local Income Tax" value={-taxes.nyLocalIncomeTax} />
                                         <StubRow label="State Disability (NYSDI)" value={-taxes.nyDisabilityInsurance} />
                                         <StubRow label="Paid Family Leave (NYPFL)" value={-taxes.nyPaidFamilyLeave} />
                                     </>
@@ -314,6 +322,37 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
                                     </>
                                 )}
 
+                                {isOH && totalOHTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">OHIO TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.ohStateIncomeTax} />
+                                        <StubRow label="Local Income Tax" value={-taxes.ohLocalIncomeTax} />
+                                    </>
+                                )}
+
+                                {isPA && totalPATaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">PENNSYLVANIA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.paStateIncomeTax} />
+                                        <StubRow label="Local Taxes (EIT/LST)" value={-taxes.paLocalIncomeTax} />
+                                    </>
+                                )}
+
+                                {isMI && totalMITaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">MICHIGAN TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.miStateIncomeTax} />
+                                        <StubRow label="City Income Tax" value={-taxes.miLocalIncomeTax} />
+                                    </>
+                                )}
+
+                                {isKY && totalKYTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">KENTUCKY TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.kyStateIncomeTax} />
+                                        <StubRow label="Local Occ. Tax" value={-taxes.kyLocalIncomeTax} />
+                                    </>
+                                )}
 
                                 <div className="border-t my-2"></div>
                                 <StubRow label="Total Taxes" value={-totalTaxes} />

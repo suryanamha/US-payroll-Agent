@@ -22,6 +22,10 @@ const STATE_NAMES: Record<PayrollFormData['state'], string> = {
     SD: 'South Dakota',
     TN: 'Tennessee',
     WY: 'Wyoming',
+    OH: 'Ohio',
+    PA: 'Pennsylvania',
+    MI: 'Michigan',
+    KY: 'Kentucky',
 };
 
 export function Loader({ state }: { state?: PayrollFormData['state'] }) {
