@@ -13,7 +13,7 @@ export type PostTaxDeductionType = 'Garnishment' | 'Roth IRA' | 'Union Dues' | '
 export interface PayrollFormData {
   employeeName: string;
   employeeType: 'employee' | 'contractor';
-  state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA';
+  state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY';
   payPeriodStart: string;
   payPeriodEnd: string;
   payFrequency: 'weekly' | 'bi-weekly' | 'semi-monthly' | 'monthly';
@@ -129,6 +129,12 @@ export interface Taxes {
   azStateIncomeTax: number;
   arStateIncomeTax: number;
   gaStateIncomeTax: number;
+  txStateIncomeTax: number; // Will be 0
+  nvStateIncomeTax: number; // Will be 0
+  nhStateIncomeTax: number; // Will be 0
+  sdStateIncomeTax: number; // Will be 0
+  tnStateIncomeTax: number; // Will be 0
+  wyStateIncomeTax: number; // Will be 0
 }
 
 export interface PayStubData {
@@ -136,7 +142,7 @@ export interface PayStubData {
   employeeInfo: {
     name: string;
     employeeType: 'employee' | 'contractor';
-    state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA';
+    state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY';
   };
   payPeriod: {
     startDate: string;

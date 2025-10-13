@@ -26,9 +26,15 @@ const SUPPORTED_STATES = [
     { value: 'FL', label: 'Florida' },
     { value: 'GA', label: 'Georgia' },
     { value: 'IN', label: 'Indiana' },
+    { value: 'NV', label: 'Nevada' },
+    { value: 'NH', label: 'New Hampshire' },
     { value: 'NJ', label: 'New Jersey' },
     { value: 'NY', label: 'New York' },
     { value: 'OR', label: 'Oregon' },
+    { value: 'SD', label: 'South Dakota' },
+    { value: 'TN', label: 'Tennessee' },
+    { value: 'TX', label: 'Texas' },
+    { value: 'WY', label: 'Wyoming' },
 ];
 
 const PRE_TAX_DEDUCTION_TYPES: PreTaxDeductionType[] = ['Health Insurance', 'Dental Insurance', 'Vision Insurance', '401(k) / 403(b)', 'HSA Contribution', 'FSA Contribution', 'Other'];
@@ -514,6 +520,12 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                 {data.state === 'NJ' && (<><Select label="NJ State Filing Status" id="stateFilingStatus" name="stateFilingStatus" value={data.stateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="A">A (Single)</option><option value="B">B (Married/Civil Union, Separate)</option><option value="C">C (Married/Civil Union, Joint)</option><option value="D">D (Head of Household)</option><option value="E">E (Surviving Spouse/Civil Union)</option></Select><Input label="NJ State Allowances" id="stateAllowances" name="stateAllowances" type="number" min="0" value={data.stateAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NJ Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="njExemptStateTax" name="njExemptStateTax" checked={data.njExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from SUI/SDI (e.g., family employment)" id="njExemptSuiSdi" name="njExemptSuiSdi" checked={data.njExemptSuiSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from Family Leave Insurance (FLI)" id="njExemptFli" name="njExemptFli" checked={data.njExemptFli} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'NY' && (<><Select label="NY State Filing Status" id="nyStateFilingStatus" name="nyStateFilingStatus" value={data.nyStateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="NY State Allowances" id="nyStateAllowances" name="nyStateAllowances" type="number" min="0" value={data.nyStateAllowances} onChange={handleChange} disabled={isContractor} /><Input label="NY Additional Withholding ($)" id="nyAdditionalWithholding" name="nyAdditionalWithholding" type="number" min="0" step="0.01" value={data.nyAdditionalWithholding} onChange={handleChange} disabled={isContractor} error={errors.nyAdditionalWithholding} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NY Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="nyExemptStateTax" name="nyExemptStateTax" checked={data.nyExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from State Disability Insurance (NYSDI)" id="nyExemptSdi" name="nyExemptSdi" checked={data.nyExemptSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Employee has a waiver for Paid Family Leave (PFL)" id="nyPflWaiver" name="nyPflWaiver" checked={data.nyPflWaiver} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'OR' && (<><Select label="OR State Filing Status" id="orFilingStatus" name="orFilingStatus" value={data.orFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="married_separately">Married Filing Separately</option></Select><Input label="OR State Allowances (Form OR-W-4)" id="orAllowances" name="orAllowances" type="number" min="0" value={data.orAllowances} onChange={handleChange} disabled={isContractor} /><Input label="OR Additional Withholding ($)" id="orAdditionalWithholding" name="orAdditionalWithholding" type="number" min="0" step="0.01" value={data.orAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">OR Tax Exemptions</h4><Checkbox label="Claim exemption from state income tax" id="orExempt" name="orExempt" checked={data.orExempt} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'TX' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Texas does not have a state income tax, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'NV' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Nevada does not have a state income tax, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'NH' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>New Hampshire does not have a state income tax on wages, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'SD' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>South Dakota does not have a state income tax, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'TN' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Tennessee does not have a state income tax on wages, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'WY' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Wyoming does not have a state income tax, so no state-level withholding information is required.</p></div>)}
             </Section>
 
             <div className="border-t border-gray-200 pt-6 text-center">
@@ -562,6 +574,12 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                     {data.state === 'AZ' && <Input label="AZ State Income Tax" id="sugg-az-sit" value={suggestedTaxes.azStateIncomeTax.toFixed(2)} readOnly disabled />}
                     {data.state === 'AR' && <Input label="AR State Income Tax" id="sugg-ar-sit" value={suggestedTaxes.arStateIncomeTax.toFixed(2)} readOnly disabled />}
                     {data.state === 'GA' && <Input label="GA State Income Tax" id="sugg-ga-sit" value={suggestedTaxes.gaStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'TX' && <Input label="TX State Income Tax" id="sugg-tx-sit" value={suggestedTaxes.txStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'NV' && <Input label="NV State Income Tax" id="sugg-nv-sit" value={suggestedTaxes.nvStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'NH' && <Input label="NH State Income Tax" id="sugg-nh-sit" value={suggestedTaxes.nhStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'SD' && <Input label="SD State Income Tax" id="sugg-sd-sit" value={suggestedTaxes.sdStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'TN' && <Input label="TN State Income Tax" id="sugg-tn-sit" value={suggestedTaxes.tnStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'WY' && <Input label="WY State Income Tax" id="sugg-wy-sit" value={suggestedTaxes.wyStateIncomeTax.toFixed(2)} readOnly disabled />}
                 </Section>
             )}
 

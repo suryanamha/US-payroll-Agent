@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import type { PayStubData } from '../types';
 
@@ -36,6 +38,12 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const isAR = employeeInfo.state === 'AR';
     const isGA = employeeInfo.state === 'GA';
     const isFL = employeeInfo.state === 'FL';
+    const isTX = employeeInfo.state === 'TX';
+    const isNV = employeeInfo.state === 'NV';
+    const isNH = employeeInfo.state === 'NH';
+    const isSD = employeeInfo.state === 'SD';
+    const isTN = employeeInfo.state === 'TN';
+    const isWY = employeeInfo.state === 'WY';
     const printContainerRef = useRef<HTMLDivElement>(null);
 
     const { taxes } = deductions;
@@ -53,6 +61,12 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const totalAZTaxes = isAZ && taxes ? taxes.azStateIncomeTax : 0;
     const totalARTaxes = isAR && taxes ? taxes.arStateIncomeTax : 0;
     const totalGATaxes = isGA && taxes ? taxes.gaStateIncomeTax : 0;
+    const totalTXTaxes = isTX && taxes ? taxes.txStateIncomeTax : 0; // Always 0
+    const totalNVTaxes = isNV && taxes ? taxes.nvStateIncomeTax : 0; // Always 0
+    const totalNHTaxes = isNH && taxes ? taxes.nhStateIncomeTax : 0; // Always 0
+    const totalSDTaxes = isSD && taxes ? taxes.sdStateIncomeTax : 0; // Always 0
+    const totalTNTaxes = isTN && taxes ? taxes.tnStateIncomeTax : 0; // Always 0
+    const totalWYTaxes = isWY && taxes ? taxes.wyStateIncomeTax : 0; // Always 0
 
     const handlePrint = () => {
         const input = printContainerRef.current;
@@ -257,6 +271,49 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
                                         <StubRow label="State Income Tax" value={-taxes.gaStateIncomeTax} />
                                     </>
                                 )}
+                                
+                                {isTX && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">TEXAS TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.txStateIncomeTax} />
+                                    </>
+                                )}
+                                
+                                {isNV && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">NEVADA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.nvStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isNH && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">NEW HAMPSHIRE TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.nhStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isSD && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">SOUTH DAKOTA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.sdStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isTN && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">TENNESSEE TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.tnStateIncomeTax} />
+                                    </>
+                                )}
+                                
+                                {isWY && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">WYOMING TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.wyStateIncomeTax} />
+                                    </>
+                                )}
+
 
                                 <div className="border-t my-2"></div>
                                 <StubRow label="Total Taxes" value={-totalTaxes} />

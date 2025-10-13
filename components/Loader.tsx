@@ -16,6 +16,12 @@ const STATE_NAMES: Record<PayrollFormData['state'], string> = {
     AZ: 'Arizona',
     AR: 'Arkansas',
     GA: 'Georgia',
+    TX: 'Texas',
+    NV: 'Nevada',
+    NH: 'New Hampshire',
+    SD: 'South Dakota',
+    TN: 'Tennessee',
+    WY: 'Wyoming',
 };
 
 export function Loader({ state }: { state?: PayrollFormData['state'] }) {

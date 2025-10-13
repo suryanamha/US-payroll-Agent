@@ -33,6 +33,12 @@ const taxesSchema = {
         azStateIncomeTax: { type: Type.NUMBER },
         arStateIncomeTax: { type: Type.NUMBER },
         gaStateIncomeTax: { type: Type.NUMBER },
+        txStateIncomeTax: { type: Type.NUMBER },
+        nvStateIncomeTax: { type: Type.NUMBER },
+        nhStateIncomeTax: { type: Type.NUMBER },
+        sdStateIncomeTax: { type: Type.NUMBER },
+        tnStateIncomeTax: { type: Type.NUMBER },
+        wyStateIncomeTax: { type: Type.NUMBER },
     },
 };
 
@@ -138,7 +144,7 @@ const getCountyRate = (countyName: string): number => {
 const buildBasePrompt = (formData: PayrollFormData) => {
     const residenceCountyRate = getCountyRate(formData.inCountyOfResidence);
     const workCountyRate = getCountyRate(formData.inCountyOfWork);
-    const otherStates = "NJ, FL, NY, IN, CA, OR, DE, DC, AL, AK, AZ, AR, GA".split(', ').filter(s => s !== formData.state).join(', ');
+    const otherStates = "NJ, FL, NY, IN, CA, OR, DE, DC, AL, AK, AZ, AR, GA, TX, NV, NH, SD, TN, WY".split(', ').filter(s => s !== formData.state).join(', ');
 
     // Pre-process deductions to create a simple name for the AI prompt.
     const processDeductions = (deductions: any[]) => {
@@ -254,6 +260,12 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       17. For Arizona: If \`azExemptStateTax\` is true, \`azStateIncomeTax\` MUST be 0. Otherwise, calculate it based on the specified withholding rate.
       18. For Arkansas: If \`arExemptStateTax\` is true, \`arStateIncomeTax\` MUST be 0.
       19. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0.
+      20. For Texas: \`txStateIncomeTax\` MUST be 0 as there is no state income tax.
+      21. For Nevada: \`nvStateIncomeTax\` MUST be 0 as there is no state income tax.
+      22. For New Hampshire: \`nhStateIncomeTax\` MUST be 0 as there is no state income tax on wages.
+      23. For South Dakota: \`sdStateIncomeTax\` MUST be 0 as there is no state income tax.
+      24. For Tennessee: \`tnStateIncomeTax\` MUST be 0 as there is no state income tax on wages.
+      25. For Wyoming: \`wyStateIncomeTax\` MUST be 0 as there is no state income tax.
     `,
         processedPreTaxDeductions,
         processedPostTaxDeductions,
@@ -394,6 +406,12 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
     - For Arizona: If 'azExemptStateTax' is true, confirm 'azStateIncomeTax' is 0.
     - For Arkansas: If 'arExemptStateTax' is true, confirm 'arStateIncomeTax' is 0.
     - For Georgia: If 'gaExemptStateTax' is true, confirm 'gaStateIncomeTax' is 0.
+    - For Texas: Verify that 'txStateIncomeTax' is 0.
+    - For Nevada: Verify that 'nvStateIncomeTax' is 0.
+    - For New Hampshire: Verify that 'nhStateIncomeTax' is 0.
+    - For South Dakota: Verify that 'sdStateIncomeTax' is 0.
+    - For Tennessee: Verify that 'tnStateIncomeTax' is 0.
+    - For Wyoming: Verify that 'wyStateIncomeTax' is 0.
     - Mention if the hourly rate (if applicable) is above the state minimum wage.
     - Conclude with a general statement about overall compliance based on the visible data.
     - Format the output as clean, readable text.
@@ -419,13 +437,13 @@ export async function getRequiredForms(formData: PayrollFormData): Promise<Requi
 
     Instructions:
     1.  Identify the most common and critical forms. For an 'employee', this MUST include Form I-9, Form W-4, and the primary state tax withholding form (like NJ-W4 for New Jersey, IT-2104 for New York, WH-4 for Indiana, DE 4 for California, OR-W-4 for Oregon, W-4 DE for Delaware, D-4 for the District of Columbia, A-4 for Alabama, A-4 for Arizona, AR4EC for Arkansas, or G-4 for Georgia). For a 'contractor', the list MUST include Form W-9.
-    2.  If the state is Alaska or Florida, which have no state income tax, do not include a state tax withholding form.
+    2.  If the state is Alaska, Florida, Texas, Nevada, New Hampshire, South Dakota, Tennessee, or Wyoming which have no state income tax, do not include a state tax withholding form.
     3.  For each form, provide all the requested details: formName, formId, purpose, link, pdfLink, filledBy, and category.
     4.  'link' must be the URL to the official government *information page*.
     5.  'pdfLink' must be a direct link to the fillable PDF file itself. It should end with '.pdf'.
     6.  'filledBy' must be 'Employee', 'Employer', or 'Both'.
     7.  'category' must be one of: 'Federal Onboarding', 'State Onboarding', 'Federal Tax', 'State Tax'.
-    8.  Ensure all links are to official government domains (e.g., irs.gov, uscis.gov, revenue.alabama.gov, azdor.gov, dfas.arkansas.gov, dor.georgia.gov, etc.).
+    8.  Ensure all links are to official government domains (e.g., irs.gov, uscis.gov, revenue.alabama.gov, azdor.gov, dfas.arkansas.gov, dor.georgia.gov, twc.texas.gov, etc.).
     9.  Return the information in a JSON array that strictly adheres to the provided schema. Do not return any extra text or explanations.
   `;
 
