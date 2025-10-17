@@ -1,5 +1,4 @@
 
-
 export interface CompanyInfo {
   name: string;
   address: string;
@@ -13,7 +12,7 @@ export type PostTaxDeductionType = 'Garnishment' | 'Roth IRA' | 'Union Dues' | '
 export interface PayrollFormData {
   employeeName: string;
   employeeType: 'employee' | 'contractor';
-  state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY' | 'OH' | 'PA' | 'MI' | 'KY';
+  state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY' | 'OH' | 'PA' | 'MI' | 'KY' | 'CO' | 'CT' | 'HI' | 'ID' | 'IL' | 'IA' | 'KS' | 'LA' | 'ME' | 'MD' | 'MA' | 'MN' | 'MS' | 'MO' | 'MT' | 'NE' | 'NM' | 'NC' | 'ND' | 'OK' | 'RI' | 'SC' | 'UT' | 'VT' | 'VA' | 'WA' | 'WV' | 'WI';
   payPeriodStart: string;
   payPeriodEnd: string;
   payFrequency: 'weekly' | 'bi-weekly' | 'semi-monthly' | 'monthly';
@@ -103,6 +102,124 @@ export interface PayrollFormData {
   kyAdditionalWithholding: number;
   kyExemptStateTax: boolean;
   kyWorkLocation: string;
+  // CO
+  coFilingStatus: 'single' | 'married' | 'married_single_rate';
+  coAllowances: number;
+  coExemptStateTax: boolean;
+  // CT
+  ctWithholdingCode: 'A' | 'B' | 'C' | 'D' | 'F';
+  ctExemptStateTax: boolean;
+  // HI
+  hiFilingStatus: 'single' | 'married' | 'head_of_household';
+  hiAllowances: number;
+  hiExemptStateTax: boolean;
+  // ID
+  idFilingStatus: 'single' | 'married';
+  idAllowances: number;
+  idAdditionalWithholding: number;
+  idExemptStateTax: boolean;
+  // IL
+  ilBasicAllowances: number;
+  ilAdditionalAllowances: number;
+  ilExemptStateTax: boolean;
+  // IA
+  iaAllowances: number;
+  iaAdditionalWithholding: number;
+  iaExemptStateTax: boolean;
+  // KS
+  ksFilingStatus: 'single' | 'married' | 'head_of_household';
+  ksAllowances: number;
+  ksExemptStateTax: boolean;
+  // LA
+  laFilingStatus: 'single' | 'married';
+  laAllowances: number;
+  laDependents: number;
+  laExemptStateTax: boolean;
+  // ME
+  meFilingStatus: 'single' | 'married' | 'head_of_household';
+  meAllowances: number;
+  meExemptStateTax: boolean;
+  // MD
+  mdFilingStatus: 'single' | 'married_jointly' | 'married_separately' | 'head_of_household' | 'dependent';
+  mdExemptions: number;
+  mdCounty: string;
+  mdExemptStateTax: boolean;
+  mdExemptCountyTax: boolean;
+  // MA
+  maFilingStatus: 'single' | 'married' | 'head_of_household';
+  maExemptions: number;
+  maAdditionalWithholding: number;
+  maExemptStateTax: boolean;
+  maExemptPfml: boolean;
+  // MN
+  mnFilingStatus: 'single' | 'married';
+  mnAllowances: number;
+  mnExemptStateTax: boolean;
+  // MS
+  msFilingStatus: 'single' | 'married' | 'head_of_family';
+  msExemptions: number;
+  msExemptStateTax: boolean;
+  // MO
+  moFilingStatus: 'single' | 'married_one_income' | 'married_both_working' | 'head_of_household';
+  moAllowances: number;
+  moAdditionalWithholding: number;
+  moExemptStateTax: boolean;
+  // MT
+  mtAllowances: number;
+  mtAdditionalWithholding: number;
+  mtExemptStateTax: boolean;
+  // NE
+  neFilingStatus: 'single' | 'married' | 'head_of_household';
+  neAllowances: number;
+  neExemptStateTax: boolean;
+  // NM
+  nmExemptions: number;
+  nmAdditionalWithholding: number;
+  nmExemptStateTax: boolean;
+  // NC
+  ncFilingStatus: 'single' | 'married' | 'head_of_household';
+  ncAllowances: number;
+  ncAdditionalWithholding: number;
+  ncExemptStateTax: boolean;
+  // ND
+  ndFilingStatus: 'single' | 'married';
+  ndAllowances: number;
+  ndExemptStateTax: boolean;
+  // OK
+  okFilingStatus: 'single' | 'married';
+  okAllowances: number;
+  okExemptStateTax: boolean;
+  // RI
+  riAllowances: number;
+  riAdditionalWithholding: number;
+  riExemptStateTax: boolean;
+  riExemptTdi: boolean;
+  // SC
+  scFilingStatus: 'single' | 'married';
+  scExemptions: number;
+  scAdditionalWithholding: number;
+  scExemptStateTax: boolean;
+  // UT
+  utFilingStatus: 'single' | 'married';
+  utAllowances: number;
+  utExemptStateTax: boolean;
+  // VT
+  vtFilingStatus: 'single' | 'married' | 'head_of_household';
+  vtAllowances: number;
+  vtExemptStateTax: boolean;
+  // VA
+  vaPersonalExemptions: number;
+  vaDependentExemptions: number;
+  vaExemptStateTax: boolean;
+  // WA
+  waExemptPfml: boolean;
+  // WV
+  wvAllowances: number;
+  wvExemptStateTax: boolean;
+  // WI
+  wiFilingStatus: 'single' | 'married_joint' | 'married_separate' | 'head_of_household';
+  wiAllowances: number;
+  wiExemptStateTax: boolean;
   // Common
   preTaxDeductions: {
     type: PreTaxDeductionType;
@@ -165,6 +282,38 @@ export interface Taxes {
   miLocalIncomeTax: number;
   kyStateIncomeTax: number;
   kyLocalIncomeTax: number;
+  coStateIncomeTax: number;
+  ctStateIncomeTax: number;
+  hiStateIncomeTax: number;
+  idStateIncomeTax: number;
+  ilStateIncomeTax: number;
+  iaStateIncomeTax: number;
+  ksStateIncomeTax: number;
+  laStateIncomeTax: number;
+  meStateIncomeTax: number;
+  mdStateIncomeTax: number;
+  mdCountyIncomeTax: number;
+  maStateIncomeTax: number;
+  maPFML: number;
+  mnStateIncomeTax: number;
+  msStateIncomeTax: number;
+  moStateIncomeTax: number;
+  mtStateIncomeTax: number;
+  neStateIncomeTax: number;
+  nmStateIncomeTax: number;
+  ncStateIncomeTax: number;
+  ndStateIncomeTax: number;
+  okStateIncomeTax: number;
+  riStateIncomeTax: number;
+  riTDI: number;
+  scStateIncomeTax: number;
+  utStateIncomeTax: number;
+  vtStateIncomeTax: number;
+  vaStateIncomeTax: number;
+  waStateIncomeTax: number;
+  waPFML: number;
+  wvStateIncomeTax: number;
+  wiStateIncomeTax: number;
 }
 
 export interface PayStubData {
@@ -172,7 +321,7 @@ export interface PayStubData {
   employeeInfo: {
     name: string;
     employeeType: 'employee' | 'contractor';
-    state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY' | 'OH' | 'PA' | 'MI' | 'KY';
+    state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY' | 'OH' | 'PA' | 'MI' | 'KY' | 'CO' | 'CT' | 'HI' | 'ID' | 'IL' | 'IA' | 'KS' | 'LA' | 'ME' | 'MD' | 'MA' | 'MN' | 'MS' | 'MO' | 'MT' | 'NE' | 'NM' | 'NC' | 'ND' | 'OK' | 'RI' | 'SC' | 'UT' | 'VT' | 'VA' | 'WA' | 'WV' | 'WI';
   };
   payPeriod: {
     startDate: string;

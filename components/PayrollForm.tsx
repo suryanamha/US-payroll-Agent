@@ -1,9 +1,9 @@
 
-
 import React, { useState, useEffect } from 'react';
 import type { PayrollFormData, PreTaxDeductionType, PostTaxDeductionType, Taxes } from '../types';
 import { calculateTaxesOnly } from '../services/geminiService';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
+import { MARYLAND_COUNTY_TAX_RATES } from '../data/MarylandCountyTaxRates';
 
 
 interface PayrollFormProps {
@@ -20,23 +20,51 @@ const SUPPORTED_STATES = [
     { value: 'AZ', label: 'Arizona' },
     { value: 'AR', label: 'Arkansas' },
     { value: 'CA', label: 'California' },
+    { value: 'CO', label: 'Colorado' },
+    { value: 'CT', label: 'Connecticut' },
     { value: 'DE', label: 'Delaware' },
     { value: 'DC', label: 'District of Columbia' },
     { value: 'FL', label: 'Florida' },
     { value: 'GA', label: 'Georgia' },
+    { value: 'HI', label: 'Hawaii' },
+    { value: 'ID', label: 'Idaho' },
+    { value: 'IL', label: 'Illinois' },
     { value: 'IN', label: 'Indiana' },
+    { value: 'IA', label: 'Iowa' },
+    { value: 'KS', label: 'Kansas' },
     { value: 'KY', label: 'Kentucky' },
+    { value: 'LA', label: 'Louisiana' },
+    { value: 'ME', label: 'Maine' },
+    { value: 'MD', label: 'Maryland' },
+    { value: 'MA', label: 'Massachusetts' },
     { value: 'MI', label: 'Michigan' },
+    { value: 'MN', label: 'Minnesota' },
+    { value: 'MS', label: 'Mississippi' },
+    { value: 'MO', label: 'Missouri' },
+    { value: 'MT', label: 'Montana' },
+    { value: 'NE', label: 'Nebraska' },
     { value: 'NV', label: 'Nevada' },
     { value: 'NH', label: 'New Hampshire' },
     { value: 'NJ', label: 'New Jersey' },
+    { value: 'NM', label: 'New Mexico' },
     { value: 'NY', label: 'New York' },
+    { value: 'NC', label: 'North Carolina' },
+    { value: 'ND', label: 'North Dakota' },
     { value: 'OH', label: 'Ohio' },
+    { value: 'OK', label: 'Oklahoma' },
     { value: 'OR', label: 'Oregon' },
     { value: 'PA', label: 'Pennsylvania' },
+    { value: 'RI', label: 'Rhode Island' },
+    { value: 'SC', label: 'South Carolina' },
     { value: 'SD', label: 'South Dakota' },
     { value: 'TN', label: 'Tennessee' },
     { value: 'TX', label: 'Texas' },
+    { value: 'UT', label: 'Utah' },
+    { value: 'VT', label: 'Vermont' },
+    { value: 'VA', label: 'Virginia' },
+    { value: 'WA', label: 'Washington' },
+    { value: 'WV', label: 'West Virginia' },
+    { value: 'WI', label: 'Wisconsin' },
     { value: 'WY', label: 'Wyoming' },
 ];
 
@@ -45,6 +73,15 @@ const POST_TAX_DEDUCTION_TYPES: PostTaxDeductionType[] = ['Garnishment', 'Roth I
 
 const indianaCountyOptions = [{ value: '', label: 'Select a county' }].concat(
     Object.keys(INDIANA_COUNTY_TAX_RATES)
+        .sort()
+        .map(county => ({
+            value: county,
+            label: county.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+        }))
+);
+
+const marylandCountyOptions = [{ value: '', label: 'Select a county' }].concat(
+    Object.keys(MARYLAND_COUNTY_TAX_RATES)
         .sort()
         .map(county => ({
             value: county,
@@ -145,6 +182,124 @@ export const initialFormData: PayrollFormData = {
     kyAdditionalWithholding: 0,
     kyExemptStateTax: false,
     kyWorkLocation: '',
+    // CO
+    coFilingStatus: 'single',
+    coAllowances: 1,
+    coExemptStateTax: false,
+    // CT
+    ctWithholdingCode: 'D',
+    ctExemptStateTax: false,
+    // HI
+    hiFilingStatus: 'single',
+    hiAllowances: 1,
+    hiExemptStateTax: false,
+    // ID
+    idFilingStatus: 'single',
+    idAllowances: 1,
+    idAdditionalWithholding: 0,
+    idExemptStateTax: false,
+    // IL
+    ilBasicAllowances: 1,
+    ilAdditionalAllowances: 0,
+    ilExemptStateTax: false,
+    // IA
+    iaAllowances: 1,
+    iaAdditionalWithholding: 0,
+    iaExemptStateTax: false,
+    // KS
+    ksFilingStatus: 'single',
+    ksAllowances: 1,
+    ksExemptStateTax: false,
+    // LA
+    laFilingStatus: 'single',
+    laAllowances: 1,
+    laDependents: 0,
+    laExemptStateTax: false,
+    // ME
+    meFilingStatus: 'single',
+    meAllowances: 1,
+    meExemptStateTax: false,
+    // MD
+    mdFilingStatus: 'single',
+    mdExemptions: 1,
+    mdCounty: '',
+    mdExemptStateTax: false,
+    mdExemptCountyTax: false,
+    // MA
+    maFilingStatus: 'single',
+    maExemptions: 1,
+    maAdditionalWithholding: 0,
+    maExemptStateTax: false,
+    maExemptPfml: false,
+    // MN
+    mnFilingStatus: 'single',
+    mnAllowances: 1,
+    mnExemptStateTax: false,
+    // MS
+    msFilingStatus: 'single',
+    msExemptions: 1,
+    msExemptStateTax: false,
+    // MO
+    moFilingStatus: 'single',
+    moAllowances: 1,
+    moAdditionalWithholding: 0,
+    moExemptStateTax: false,
+    // MT
+    mtAllowances: 1,
+    mtAdditionalWithholding: 0,
+    mtExemptStateTax: false,
+    // NE
+    neFilingStatus: 'single',
+    neAllowances: 1,
+    neExemptStateTax: false,
+    // NM
+    nmExemptions: 1,
+    nmAdditionalWithholding: 0,
+    nmExemptStateTax: false,
+    // NC
+    ncFilingStatus: 'single',
+    ncAllowances: 1,
+    ncAdditionalWithholding: 0,
+    ncExemptStateTax: false,
+    // ND
+    ndFilingStatus: 'single',
+    ndAllowances: 1,
+    ndExemptStateTax: false,
+    // OK
+    okFilingStatus: 'single',
+    okAllowances: 1,
+    okExemptStateTax: false,
+    // RI
+    riAllowances: 1,
+    riAdditionalWithholding: 0,
+    riExemptStateTax: false,
+    riExemptTdi: false,
+    // SC
+    scFilingStatus: 'single',
+    scExemptions: 1,
+    scAdditionalWithholding: 0,
+    scExemptStateTax: false,
+    // UT
+    utFilingStatus: 'single',
+    utAllowances: 1,
+    utExemptStateTax: false,
+    // VT
+    vtFilingStatus: 'single',
+    vtAllowances: 1,
+    vtExemptStateTax: false,
+    // VA
+    vaPersonalExemptions: 1,
+    vaDependentExemptions: 0,
+    vaExemptStateTax: false,
+    // WA
+    waExemptPfml: false,
+    // WV
+    wvAllowances: 1,
+    wvExemptStateTax: false,
+    // WI
+    wiFilingStatus: 'single',
+    wiAllowances: 1,
+    wiExemptStateTax: false,
     // Common
     preTaxDeductions: [
         { type: 'Health Insurance', customName: '', amount: 0, isRecurring: false, startDate: '', endDate: '' },
@@ -226,6 +381,10 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
             if (formData.inDependentExemptions < 0) newErrors.inDependentExemptions = "Dependent exemptions cannot be negative.";
         }
         
+        if (formData.state === 'MD') {
+            if (!formData.mdCounty) newErrors.mdCounty = "County is required for Maryland.";
+        }
+        
         if (formData.state === 'NY') {
             if (formData.nyAdditionalWithholding < 0) newErrors.nyAdditionalWithholding = "Cannot be negative.";
         }
@@ -275,6 +434,29 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
       'ohExemptStateTax', 'ohMunicipality', 'paExemptStateTax', 'paResidencyPsdCode',
       'paWorkplacePsdCode', 'paIsExemptLST', 'miAllowances', 'miAdditionalWithholding',
       'miExemptStateTax', 'miCityOfResidence', 'kyAllowances', 'kyAdditionalWithholding', 'kyExemptStateTax', 'kyWorkLocation',
+      'coFilingStatus', 'coAllowances', 'coExemptStateTax', 'ctWithholdingCode', 'ctExemptStateTax', 'hiFilingStatus',
+      'hiAllowances', 'hiExemptStateTax', 'idFilingStatus', 'idAllowances', 'idAdditionalWithholding', 'idExemptStateTax',
+      'ilBasicAllowances', 'ilAdditionalAllowances', 'ilExemptStateTax', 'iaAllowances', 'iaAdditionalWithholding', 'iaExemptStateTax',
+      'ksFilingStatus', 'ksAllowances', 'ksExemptStateTax', 'laFilingStatus', 'laAllowances', 'laDependents', 'laExemptStateTax',
+      'meFilingStatus', 'meAllowances', 'meExemptStateTax', 'mdFilingStatus', 'mdExemptions', 'mdCounty', 'mdExemptStateTax', 'mdExemptCountyTax',
+      'maFilingStatus', 'maExemptions', 'maAdditionalWithholding', 'maExemptStateTax', 'maExemptPfml',
+      'mnFilingStatus', 'mnAllowances', 'mnExemptStateTax',
+      'msFilingStatus', 'msExemptions', 'msExemptStateTax',
+      'moFilingStatus', 'moAllowances', 'moAdditionalWithholding', 'moExemptStateTax',
+      'mtAllowances', 'mtAdditionalWithholding', 'mtExemptStateTax',
+      'neFilingStatus', 'neAllowances', 'neExemptStateTax',
+      'nmExemptions', 'nmAdditionalWithholding', 'nmExemptStateTax',
+      'ncFilingStatus', 'ncAllowances', 'ncAdditionalWithholding', 'ncExemptStateTax',
+      'ndFilingStatus', 'ndAllowances', 'ndExemptStateTax',
+      'okFilingStatus', 'okAllowances', 'okExemptStateTax',
+      'riAllowances', 'riAdditionalWithholding', 'riExemptStateTax', 'riExemptTdi',
+      'scFilingStatus', 'scExemptions', 'scAdditionalWithholding', 'scExemptStateTax',
+      'utFilingStatus', 'utAllowances', 'utExemptStateTax',
+      'vtFilingStatus', 'vtAllowances', 'vtExemptStateTax',
+      'vaPersonalExemptions', 'vaDependentExemptions', 'vaExemptStateTax',
+      'waExemptPfml',
+      'wvAllowances', 'wvExemptStateTax',
+      'wiFilingStatus', 'wiAllowances', 'wiExemptStateTax',
     ];
 
 
@@ -308,55 +490,9 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
             newFormData.federalAllowances = 0;
             newFormData.bonus = 0;
             // Reset all state specific fields
-            newFormData.stateFilingStatus = 'B';
-            newFormData.nyStateFilingStatus = 'single';
-            newFormData.stateAllowances = 0;
-            newFormData.nyStateAllowances = 0;
-            newFormData.nyAdditionalWithholding = 0;
-            newFormData.njExemptSuiSdi = false;
-            newFormData.njExemptFli = false;
-            newFormData.njExemptStateTax = false;
-            newFormData.nyPflWaiver = false;
-            newFormData.nyExemptStateTax = false;
-            newFormData.nyExemptSdi = false;
-            newFormData.inStateExemptions = 0;
-            newFormData.inDependentExemptions = 0;
-            newFormData.inExemptStateTax = false;
-            newFormData.inExemptCountyTax = false;
-            newFormData.caAllowances = 0;
-            newFormData.caAdditionalWithholding = 0;
-            newFormData.caEstimatedDeductions = 0;
-            newFormData.caEstimatedNonWageIncome = 0;
-            newFormData.caExemptStateTax = false;
-            newFormData.caExemptSdi = false;
-            newFormData.orAllowances = 0;
-            newFormData.orAdditionalWithholding = 0;
-            newFormData.orExempt = false;
-            newFormData.deAllowances = 0;
-            newFormData.deExemptStateTax = false;
-            newFormData.dcAllowances = 0;
-            newFormData.dcExemptStateTax = false;
-            newFormData.alDependents = 0;
-            newFormData.alExemptStateTax = false;
-            newFormData.azExemptStateTax = false;
-            newFormData.arAllowances = 0;
-            newFormData.arExemptStateTax = false;
-            newFormData.gaDependentAllowances = 0;
-            newFormData.gaAdditionalAllowances = 0;
-            newFormData.gaAdditionalWithholding = 0;
-            newFormData.gaExemptStateTax = false;
+            const resetState = initialFormData;
+            newFormData = { ...newFormData, ...resetStateFields(resetState) };
             newFormData.employerSutaRate = 0;
-            newFormData.ohAllowances = 0;
-            newFormData.ohAdditionalWithholding = 0;
-            newFormData.ohExemptStateTax = false;
-            newFormData.paExemptStateTax = false;
-            newFormData.paIsExemptLST = false;
-            newFormData.miAllowances = 0;
-            newFormData.miAdditionalWithholding = 0;
-            newFormData.miExemptStateTax = false;
-            newFormData.kyAllowances = 0;
-            newFormData.kyAdditionalWithholding = 0;
-            newFormData.kyExemptStateTax = false;
         }
          if (name === 'payType') {
             newFormData.rate = 0;
@@ -366,87 +502,193 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
          if (name === 'state') {
             // Reset all state-specific fields when changing state to their defaults
             const resetState = initialFormData;
-            newFormData.stateFilingStatus = resetState.stateFilingStatus; 
-            newFormData.stateAllowances = resetState.stateAllowances;
-            newFormData.njExemptSuiSdi = resetState.njExemptSuiSdi;
-            newFormData.njExemptFli = resetState.njExemptFli;
-            newFormData.njExemptStateTax = resetState.njExemptStateTax;
-            
-            newFormData.nyStateFilingStatus = resetState.nyStateFilingStatus;
-            newFormData.nyStateAllowances = resetState.nyStateAllowances;
-            newFormData.nyAdditionalWithholding = resetState.nyAdditionalWithholding;
-            newFormData.nyWorkCity = resetState.nyWorkCity;
-            newFormData.nyPflWaiver = resetState.nyPflWaiver;
-            newFormData.nyExemptStateTax = resetState.nyExemptStateTax;
-            newFormData.nyExemptSdi = resetState.nyExemptSdi;
-
-            newFormData.inCountyOfResidence = resetState.inCountyOfResidence;
-            newFormData.inCountyOfWork = resetState.inCountyOfWork;
-            newFormData.inStateExemptions = resetState.inStateExemptions;
-            newFormData.inDependentExemptions = resetState.inDependentExemptions;
-            newFormData.inExemptStateTax = resetState.inExemptStateTax;
-            newFormData.inExemptCountyTax = resetState.inExemptCountyTax;
-
-            newFormData.caFilingStatus = resetState.caFilingStatus;
-            newFormData.caAllowances = resetState.caAllowances;
-            newFormData.caEstimatedDeductions = resetState.caEstimatedDeductions;
-            newFormData.caEstimatedNonWageIncome = resetState.caEstimatedNonWageIncome;
-            newFormData.caAdditionalWithholding = resetState.caAdditionalWithholding;
-            newFormData.caExemptStateTax = resetState.caExemptStateTax;
-            newFormData.caExemptSdi = resetState.caExemptSdi;
-
-            newFormData.orFilingStatus = resetState.orFilingStatus;
-            newFormData.orAllowances = resetState.orAllowances;
-            newFormData.orAdditionalWithholding = resetState.orAdditionalWithholding;
-            newFormData.orExempt = resetState.orExempt;
-
-            newFormData.deFilingStatus = resetState.deFilingStatus;
-            newFormData.deAllowances = resetState.deAllowances;
-            newFormData.deExemptStateTax = resetState.deExemptStateTax;
-
-            newFormData.dcFilingStatus = resetState.dcFilingStatus;
-            newFormData.dcAllowances = resetState.dcAllowances;
-            newFormData.dcExemptStateTax = resetState.dcExemptStateTax;
-
-            newFormData.alFilingStatus = resetState.alFilingStatus;
-            newFormData.alDependents = resetState.alDependents;
-            newFormData.alExemptStateTax = resetState.alExemptStateTax;
-            
-            newFormData.azWithholdingRate = resetState.azWithholdingRate;
-            newFormData.azExemptStateTax = resetState.azExemptStateTax;
-            
-            newFormData.arAllowances = resetState.arAllowances;
-            newFormData.arExemptStateTax = resetState.arExemptStateTax;
-
-            newFormData.gaFilingStatus = resetState.gaFilingStatus;
-            newFormData.gaDependentAllowances = resetState.gaDependentAllowances;
-            newFormData.gaAdditionalAllowances = resetState.gaAdditionalAllowances;
-            newFormData.gaAdditionalWithholding = resetState.gaAdditionalWithholding;
-            newFormData.gaExemptStateTax = resetState.gaExemptStateTax;
-
-            newFormData.ohAllowances = resetState.ohAllowances;
-            newFormData.ohAdditionalWithholding = resetState.ohAdditionalWithholding;
-            newFormData.ohExemptStateTax = resetState.ohExemptStateTax;
-            newFormData.ohMunicipality = resetState.ohMunicipality;
-            
-            newFormData.paExemptStateTax = resetState.paExemptStateTax;
-            newFormData.paResidencyPsdCode = resetState.paResidencyPsdCode;
-            newFormData.paWorkplacePsdCode = resetState.paWorkplacePsdCode;
-            newFormData.paIsExemptLST = resetState.paIsExemptLST;
-
-            newFormData.miAllowances = resetState.miAllowances;
-            newFormData.miAdditionalWithholding = resetState.miAdditionalWithholding;
-            newFormData.miExemptStateTax = resetState.miExemptStateTax;
-            newFormData.miCityOfResidence = resetState.miCityOfResidence;
-
-            newFormData.kyAllowances = resetState.kyAllowances;
-            newFormData.kyAdditionalWithholding = resetState.kyAdditionalWithholding;
-            newFormData.kyExemptStateTax = resetState.kyExemptStateTax;
-            newFormData.kyWorkLocation = resetState.kyWorkLocation;
+            newFormData = { ...newFormData, ...resetStateFields(resetState) };
         }
         
         onDataChange(newFormData);
     };
+
+    const resetStateFields = (resetState: PayrollFormData) => ({
+        stateFilingStatus: resetState.stateFilingStatus, 
+        stateAllowances: resetState.stateAllowances,
+        njExemptSuiSdi: resetState.njExemptSuiSdi,
+        njExemptFli: resetState.njExemptFli,
+        njExemptStateTax: resetState.njExemptStateTax,
+        
+        nyStateFilingStatus: resetState.nyStateFilingStatus,
+        nyStateAllowances: resetState.nyStateAllowances,
+        nyAdditionalWithholding: resetState.nyAdditionalWithholding,
+        nyWorkCity: resetState.nyWorkCity,
+        nyPflWaiver: resetState.nyPflWaiver,
+        nyExemptStateTax: resetState.nyExemptStateTax,
+        nyExemptSdi: resetState.nyExemptSdi,
+
+        inCountyOfResidence: resetState.inCountyOfResidence,
+        inCountyOfWork: resetState.inCountyOfWork,
+        inStateExemptions: resetState.inStateExemptions,
+        inDependentExemptions: resetState.inDependentExemptions,
+        inExemptStateTax: resetState.inExemptStateTax,
+        inExemptCountyTax: resetState.inExemptCountyTax,
+
+        caFilingStatus: resetState.caFilingStatus,
+        caAllowances: resetState.caAllowances,
+        caEstimatedDeductions: resetState.caEstimatedDeductions,
+        caEstimatedNonWageIncome: resetState.caEstimatedNonWageIncome,
+        caAdditionalWithholding: resetState.caAdditionalWithholding,
+        caExemptStateTax: resetState.caExemptStateTax,
+        caExemptSdi: resetState.caExemptSdi,
+
+        orFilingStatus: resetState.orFilingStatus,
+        orAllowances: resetState.orAllowances,
+        orAdditionalWithholding: resetState.orAdditionalWithholding,
+        orExempt: resetState.orExempt,
+
+        deFilingStatus: resetState.deFilingStatus,
+        deAllowances: resetState.deAllowances,
+        deExemptStateTax: resetState.deExemptStateTax,
+
+        dcFilingStatus: resetState.dcFilingStatus,
+        dcAllowances: resetState.dcAllowances,
+        dcExemptStateTax: resetState.dcExemptStateTax,
+
+        alFilingStatus: resetState.alFilingStatus,
+        alDependents: resetState.alDependents,
+        alExemptStateTax: resetState.alExemptStateTax,
+        
+        azWithholdingRate: resetState.azWithholdingRate,
+        azExemptStateTax: resetState.azExemptStateTax,
+        
+        arAllowances: resetState.arAllowances,
+        arExemptStateTax: resetState.arExemptStateTax,
+
+        gaFilingStatus: resetState.gaFilingStatus,
+        gaDependentAllowances: resetState.gaDependentAllowances,
+        gaAdditionalAllowances: resetState.gaAdditionalAllowances,
+        gaAdditionalWithholding: resetState.gaAdditionalWithholding,
+        gaExemptStateTax: resetState.gaExemptStateTax,
+
+        ohAllowances: resetState.ohAllowances,
+        ohAdditionalWithholding: resetState.ohAdditionalWithholding,
+        ohExemptStateTax: resetState.ohExemptStateTax,
+        ohMunicipality: resetState.ohMunicipality,
+        
+        paExemptStateTax: resetState.paExemptStateTax,
+        paResidencyPsdCode: resetState.paResidencyPsdCode,
+        paWorkplacePsdCode: resetState.paWorkplacePsdCode,
+        paIsExemptLST: resetState.paIsExemptLST,
+
+        miAllowances: resetState.miAllowances,
+        miAdditionalWithholding: resetState.miAdditionalWithholding,
+        miExemptStateTax: resetState.miExemptStateTax,
+        miCityOfResidence: resetState.miCityOfResidence,
+
+        kyAllowances: resetState.kyAllowances,
+        kyAdditionalWithholding: resetState.kyAdditionalWithholding,
+        kyExemptStateTax: resetState.kyExemptStateTax,
+        kyWorkLocation: resetState.kyWorkLocation,
+        
+        coFilingStatus: resetState.coFilingStatus,
+        coAllowances: resetState.coAllowances,
+        coExemptStateTax: resetState.coExemptStateTax,
+        
+        ctWithholdingCode: resetState.ctWithholdingCode,
+        ctExemptStateTax: resetState.ctExemptStateTax,
+        
+        hiFilingStatus: resetState.hiFilingStatus,
+        hiAllowances: resetState.hiAllowances,
+        hiExemptStateTax: resetState.hiExemptStateTax,
+        
+        idFilingStatus: resetState.idFilingStatus,
+        idAllowances: resetState.idAllowances,
+        idAdditionalWithholding: resetState.idAdditionalWithholding,
+        idExemptStateTax: resetState.idExemptStateTax,
+        
+        ilBasicAllowances: resetState.ilBasicAllowances,
+        ilAdditionalAllowances: resetState.ilAdditionalAllowances,
+        ilExemptStateTax: resetState.ilExemptStateTax,
+        
+        iaAllowances: resetState.iaAllowances,
+        iaAdditionalWithholding: resetState.iaAdditionalWithholding,
+        iaExemptStateTax: resetState.iaExemptStateTax,
+        
+        ksFilingStatus: resetState.ksFilingStatus,
+        ksAllowances: resetState.ksAllowances,
+        ksExemptStateTax: resetState.ksExemptStateTax,
+        
+        laFilingStatus: resetState.laFilingStatus,
+        laAllowances: resetState.laAllowances,
+        laDependents: resetState.laDependents,
+        laExemptStateTax: resetState.laExemptStateTax,
+        
+        meFilingStatus: resetState.meFilingStatus,
+        meAllowances: resetState.meAllowances,
+        meExemptStateTax: resetState.meExemptStateTax,
+        
+        mdFilingStatus: resetState.mdFilingStatus,
+        mdExemptions: resetState.mdExemptions,
+        mdCounty: resetState.mdCounty,
+        mdExemptStateTax: resetState.mdExemptStateTax,
+        mdExemptCountyTax: resetState.mdExemptCountyTax,
+        
+        maFilingStatus: resetState.maFilingStatus,
+        maExemptions: resetState.maExemptions,
+        maAdditionalWithholding: resetState.maAdditionalWithholding,
+        maExemptStateTax: resetState.maExemptStateTax,
+        maExemptPfml: resetState.maExemptPfml,
+        // New states
+        mnFilingStatus: resetState.mnFilingStatus,
+        mnAllowances: resetState.mnAllowances,
+        mnExemptStateTax: resetState.mnExemptStateTax,
+        msFilingStatus: resetState.msFilingStatus,
+        msExemptions: resetState.msExemptions,
+        msExemptStateTax: resetState.msExemptStateTax,
+        moFilingStatus: resetState.moFilingStatus,
+        moAllowances: resetState.moAllowances,
+        moAdditionalWithholding: resetState.moAdditionalWithholding,
+        moExemptStateTax: resetState.moExemptStateTax,
+        mtAllowances: resetState.mtAllowances,
+        mtAdditionalWithholding: resetState.mtAdditionalWithholding,
+        mtExemptStateTax: resetState.mtExemptStateTax,
+        neFilingStatus: resetState.neFilingStatus,
+        neAllowances: resetState.neAllowances,
+        neExemptStateTax: resetState.neExemptStateTax,
+        nmExemptions: resetState.nmExemptions,
+        nmAdditionalWithholding: resetState.nmAdditionalWithholding,
+        nmExemptStateTax: resetState.nmExemptStateTax,
+        ncFilingStatus: resetState.ncFilingStatus,
+        ncAllowances: resetState.ncAllowances,
+        ncAdditionalWithholding: resetState.ncAdditionalWithholding,
+        ncExemptStateTax: resetState.ncExemptStateTax,
+        ndFilingStatus: resetState.ndFilingStatus,
+        ndAllowances: resetState.ndAllowances,
+        ndExemptStateTax: resetState.ndExemptStateTax,
+        okFilingStatus: resetState.okFilingStatus,
+        okAllowances: resetState.okAllowances,
+        okExemptStateTax: resetState.okExemptStateTax,
+        riAllowances: resetState.riAllowances,
+        riAdditionalWithholding: resetState.riAdditionalWithholding,
+        riExemptStateTax: resetState.riExemptStateTax,
+        riExemptTdi: resetState.riExemptTdi,
+        scFilingStatus: resetState.scFilingStatus,
+        scExemptions: resetState.scExemptions,
+        scAdditionalWithholding: resetState.scAdditionalWithholding,
+        scExemptStateTax: resetState.scExemptStateTax,
+        utFilingStatus: resetState.utFilingStatus,
+        utAllowances: resetState.utAllowances,
+        utExemptStateTax: resetState.utExemptStateTax,
+        vtFilingStatus: resetState.vtFilingStatus,
+        vtAllowances: resetState.vtAllowances,
+        vtExemptStateTax: resetState.vtExemptStateTax,
+        vaPersonalExemptions: resetState.vaPersonalExemptions,
+        vaDependentExemptions: resetState.vaDependentExemptions,
+        vaExemptStateTax: resetState.vaExemptStateTax,
+        waExemptPfml: resetState.waExemptPfml,
+        wvAllowances: resetState.wvAllowances,
+        wvExemptStateTax: resetState.wvExemptStateTax,
+        wiFilingStatus: resetState.wiFilingStatus,
+        wiAllowances: resetState.wiAllowances,
+        wiExemptStateTax: resetState.wiExemptStateTax,
+    });
     
     const handleDeductionChange = (index: number, field: string, value: string | number | boolean, type: 'preTaxDeductions' | 'postTaxDeductions') => {
         const updatedDeductions = [...data[type]];
@@ -571,24 +813,52 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                 {data.state === 'AZ' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Arizona uses a specific percentage of gross wages for state withholding, selected by the employee on Form A-4.</p></div><Select label="AZ Withholding Rate (%)" id="azWithholdingRate" name="azWithholdingRate" value={data.azWithholdingRate} onChange={handleChange} disabled={isContractor}><option value="0.5">0.5%</option><option value="1.0">1.0%</option><option value="1.5">1.5%</option><option value="2.0">2.0%</option><option value="2.5">2.5%</option><option value="3.0">3.0%</option><option value="3.5">3.5%</option></Select><div className="md:col-span-1"></div><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">AZ Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="azExemptStateTax" name="azExemptStateTax" checked={data.azExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'AR' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Arkansas uses Form AR4EC to determine withholding based on the number of allowances claimed.</p></div><Input label="AR Allowances (Form AR4EC)" id="arAllowances" name="arAllowances" type="number" min="0" value={data.arAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-1"></div><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">AR Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="arExemptStateTax" name="arExemptStateTax" checked={data.arExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'CA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>California uses Form DE 4, which accounts for filing status, allowances, and estimated deductions/income.</p></div><Select label="CA State Filing Status" id="caFilingStatus" name="caFilingStatus" value={data.caFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single_or_married_one_income">Single, or Married (with one income)</option><option value="married_two_incomes">Married (with two or more incomes)</option><option value="head_of_household">Head of Household</option></Select><Input label="CA State Allowances (Form DE 4)" id="caAllowances" name="caAllowances" type="number" min="0" value={data.caAllowances} onChange={handleChange} disabled={isContractor} /><Input label="CA Estimated Deductions ($)" id="caEstimatedDeductions" name="caEstimatedDeductions" type="number" min="0" step="0.01" value={data.caEstimatedDeductions} onChange={handleChange} disabled={isContractor} error={errors.caEstimatedDeductions} /><Input label="CA Est. Non-Wage Income ($)" id="caEstimatedNonWageIncome" name="caEstimatedNonWageIncome" type="number" min="0" step="0.01" value={data.caEstimatedNonWageIncome} onChange={handleChange} disabled={isContractor} error={errors.caEstimatedNonWageIncome} /><Input label="CA Additional Withholding ($)" id="caAdditionalWithholding" name="caAdditionalWithholding" type="number" min="0" step="0.01" value={data.caAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">CA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="caExemptStateTax" name="caExemptStateTax" checked={data.caExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from State Disability (SDI)" id="caExemptSdi" name="caExemptSdi" checked={data.caExemptSdi} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'CO' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Colorado uses Form DR 0004. Withholding is based on filing status and allowances.</p></div><Select label="CO State Filing Status" id="coFilingStatus" name="coFilingStatus" value={data.coFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="married_single_rate">Married, but withhold at higher Single rate</option></Select><Input label="CO State Allowances" id="coAllowances" name="coAllowances" type="number" min="0" value={data.coAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">CO Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="coExemptStateTax" name="coExemptStateTax" checked={data.coExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'CT' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Connecticut uses Form CT-W4, which specifies a withholding code based on filing status.</p></div><Select label="CT Withholding Code" id="ctWithholdingCode" name="ctWithholdingCode" value={data.ctWithholdingCode} onChange={handleChange} disabled={isContractor}><option value="A">A (Single/Married Separate, higher rate)</option><option value="B">B (Head of Household)</option><option value="C">C (Married/Civil Union Joint)</option><option value="D">D (Single/Married Separate, lower rate)</option><option value="F">F (Married/Civil Union Joint, one spouse works)</option></Select><div className="md:col-span-1"></div><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">CT Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="ctExemptStateTax" name="ctExemptStateTax" checked={data.ctExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'DE' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Delaware uses a standard progressive tax system. Withholding is based on filing status and allowances.</p></div><Select label="DE State Filing Status" id="deFilingStatus" name="deFilingStatus" value={data.deFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="DE State Allowances" id="deAllowances" name="deAllowances" type="number" min="0" value={data.deAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">DE Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="deExemptStateTax" name="deExemptStateTax" checked={data.deExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'DC' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>DC uses Form D-4. Withholding is based on filing status and the number of allowances claimed.</p></div><Select label="DC Filing Status" id="dcFilingStatus" name="dcFilingStatus" value={data.dcFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single_head_of_household">Single or Head of Household</option><option value="married_jointly">Married/Registered domestic partner filing jointly</option><option value="married_separately">Married/Registered domestic partner filing separately</option></Select><Input label="DC Allowances (Form D-4)" id="dcAllowances" name="dcAllowances" type="number" min="0" value={data.dcAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">DC Tax Exemptions</h4><Checkbox label="Exempt from DC Income Tax" id="dcExemptStateTax" name="dcExemptStateTax" checked={data.dcExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'FL' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Florida does not have a state income tax, so no state-level withholding information is required.</p></div>)}
                 {data.state === 'GA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Georgia uses Form G-4, which considers filing status, dependent allowances, and additional allowances.</p></div><Select label="GA State Filing Status" id="gaFilingStatus" name="gaFilingStatus" value={data.gaFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married_joint_or_hoh">Married Filing Jointly or Head of Household</option><option value="married_separate">Married Filing Separate</option></Select><Input label="GA Dependent Allowances (G-4)" id="gaDependentAllowances" name="gaDependentAllowances" type="number" min="0" value={data.gaDependentAllowances} onChange={handleChange} disabled={isContractor} /><Input label="GA Additional Allowances (G-4)" id="gaAdditionalAllowances" name="gaAdditionalAllowances" type="number" min="0" value={data.gaAdditionalAllowances} onChange={handleChange} disabled={isContractor} /><Input label="GA Additional Withholding ($)" id="gaAdditionalWithholding" name="gaAdditionalWithholding" type="number" min="0" step="0.01" value={data.gaAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">GA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="gaExemptStateTax" name="gaExemptStateTax" checked={data.gaExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'HI' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Hawaii uses Form HW-4. Withholding is based on filing status and allowances claimed.</p></div><Select label="HI State Filing Status" id="hiFilingStatus" name="hiFilingStatus" value={data.hiFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="HI State Allowances" id="hiAllowances" name="hiAllowances" type="number" min="0" value={data.hiAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">HI Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="hiExemptStateTax" name="hiExemptStateTax" checked={data.hiExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'ID' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Idaho uses Form ID W-4. Withholding is based on filing status, allowances, and any additional withholding.</p></div><Select label="ID State Filing Status" id="idFilingStatus" name="idFilingStatus" value={data.idFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="ID State Allowances" id="idAllowances" name="idAllowances" type="number" min="0" value={data.idAllowances} onChange={handleChange} disabled={isContractor} /><Input label="ID Additional Withholding ($)" id="idAdditionalWithholding" name="idAdditionalWithholding" type="number" min="0" step="0.01" value={data.idAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">ID Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="idExemptStateTax" name="idExemptStateTax" checked={data.idExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'IL' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Illinois uses Form IL-W-4. Withholding is based on basic and additional allowances claimed.</p></div><Input label="IL Basic Allowances" id="ilBasicAllowances" name="ilBasicAllowances" type="number" min="0" value={data.ilBasicAllowances} onChange={handleChange} disabled={isContractor} /><Input label="IL Additional Allowances" id="ilAdditionalAllowances" name="ilAdditionalAllowances" type="number" min="0" value={data.ilAdditionalAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">IL Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="ilExemptStateTax" name="ilExemptStateTax" checked={data.ilExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'IN' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Indiana has a flat state income tax rate, plus a variable county tax rate based on residence/work location.</p></div><Select label="County of Residence" id="inCountyOfResidence" name="inCountyOfResidence" value={data.inCountyOfResidence} onChange={handleChange} disabled={isContractor} error={errors.inCountyOfResidence}>{indianaCountyOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</Select><Select label="County of Work" id="inCountyOfWork" name="inCountyOfWork" value={data.inCountyOfWork} onChange={handleChange} disabled={isContractor} error={errors.inCountyOfWork}>{indianaCountyOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</Select><Input label="IN Personal Exemptions (Form WH-4)" id="inStateExemptions" name="inStateExemptions" type="number" min="0" value={data.inStateExemptions} onChange={handleChange} disabled={isContractor} error={errors.inStateExemptions} /><Input label="IN Dependent Exemptions (Form WH-4)" id="inDependentExemptions" name="inDependentExemptions" type="number" min="0" value={data.inDependentExemptions} onChange={handleChange} disabled={isContractor} error={errors.inDependentExemptions} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">IN Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="inExemptStateTax" name="inExemptStateTax" checked={data.inExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from County Income Tax" id="inExemptCountyTax" name="inExemptCountyTax" checked={data.inExemptCountyTax} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'NJ' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>New Jersey uses Form NJ-W4 and a progressive tax system based on specific filing status letters and allowances.</p></div><Select label="NJ State Filing Status" id="stateFilingStatus" name="stateFilingStatus" value={data.stateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="A">A (Single)</option><option value="B">B (Married/Civil Union, Separate)</option><option value="C">C (Married/Civil Union, Joint)</option><option value="D">D (Head of Household)</option><option value="E">E (Surviving Spouse/Civil Union)</option></Select><Input label="NJ State Allowances" id="stateAllowances" name="stateAllowances" type="number" min="0" value={data.stateAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NJ Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="njExemptStateTax" name="njExemptStateTax" checked={data.njExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from SUI/SDI (e.g., family employment)" id="njExemptSuiSdi" name="njExemptSuiSdi" checked={data.njExemptSuiSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from Family Leave Insurance (FLI)" id="njExemptFli" name="njExemptFli" checked={data.njExemptFli} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'NY' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>New York withholding includes state tax (Form IT-2104) and potentially local tax for cities like NYC and Yonkers.</p></div><Select label="NY State Filing Status" id="nyStateFilingStatus" name="nyStateFilingStatus" value={data.nyStateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="NY State Allowances" id="nyStateAllowances" name="nyStateAllowances" type="number" min="0" value={data.nyStateAllowances} onChange={handleChange} disabled={isContractor} /><Input label="NY Additional Withholding ($)" id="nyAdditionalWithholding" name="nyAdditionalWithholding" type="number" min="0" step="0.01" value={data.nyAdditionalWithholding} onChange={handleChange} disabled={isContractor} error={errors.nyAdditionalWithholding} /><Select label="NY Work City (for local tax)" id="nyWorkCity" name="nyWorkCity" value={data.nyWorkCity} onChange={handleChange} disabled={isContractor}><option value="none">Outside NYC / Yonkers</option><option value="nyc">New York City</option><option value="yonkers">Yonkers</option></Select><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NY Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="nyExemptStateTax" name="nyExemptStateTax" checked={data.nyExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from State Disability Insurance (NYSDI)" id="nyExemptSdi" name="nyExemptSdi" checked={data.nyExemptSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Employee has a waiver for Paid Family Leave (PFL)" id="nyPflWaiver" name="nyPflWaiver" checked={data.nyPflWaiver} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'OR' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Oregon uses Form OR-W-4. Withholding is based on filing status, allowances, and any additional amount requested.</p></div><Select label="OR State Filing Status" id="orFilingStatus" name="orFilingStatus" value={data.orFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="married_separately">Married Filing Separately</option></Select><Input label="OR State Allowances (Form OR-W-4)" id="orAllowances" name="orAllowances" type="number" min="0" value={data.orAllowances} onChange={handleChange} disabled={isContractor} /><Input label="OR Additional Withholding ($)" id="orAdditionalWithholding" name="orAdditionalWithholding" type="number" min="0" step="0.01" value={data.orAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">OR Tax Exemptions</h4><Checkbox label="Claim exemption from state income tax" id="orExempt" name="orExempt" checked={data.orExempt} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'TX' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Texas does not have a state income tax, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'IA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Iowa uses Form IA W-4. Withholding is based on allowances and any additional withholding.</p></div><Input label="IA Allowances (Total)" id="iaAllowances" name="iaAllowances" type="number" min="0" value={data.iaAllowances} onChange={handleChange} disabled={isContractor} /><Input label="IA Additional Withholding ($)" id="iaAdditionalWithholding" name="iaAdditionalWithholding" type="number" min="0" step="0.01" value={data.iaAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">IA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="iaExemptStateTax" name="iaExemptStateTax" checked={data.iaExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'KS' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Kansas uses Form K-4. Withholding is based on filing status and allowances.</p></div><Select label="KS State Filing Status" id="ksFilingStatus" name="ksFilingStatus" value={data.ksFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="KS State Allowances" id="ksAllowances" name="ksAllowances" type="number" min="0" value={data.ksAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">KS Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="ksExemptStateTax" name="ksExemptStateTax" checked={data.ksExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'KY' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Kentucky has a flat state income tax. Local occupational taxes are also withheld based on the work location.</p></div><Input label="KY Allowances (Tax Credits)" id="kyAllowances" name="kyAllowances" type="number" min="0" value={data.kyAllowances} onChange={handleChange} disabled={isContractor} /><Input label="KY Additional Withholding ($)" id="kyAdditionalWithholding" name="kyAdditionalWithholding" type="number" min="0" step="0.01" value={data.kyAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><Input label="Work County/City (for local tax)" id="kyWorkLocation" name="kyWorkLocation" type="text" placeholder="e.g., Louisville" value={data.kyWorkLocation} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">KY Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="kyExemptStateTax" name="kyExemptStateTax" checked={data.kyExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'LA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Louisiana uses Form L-4. Withholding is based on filing status, personal allowances, and dependents.</p></div><Select label="LA State Filing Status" id="laFilingStatus" name="laFilingStatus" value={data.laFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="LA Personal Allowances" id="laAllowances" name="laAllowances" type="number" min="0" value={data.laAllowances} onChange={handleChange} disabled={isContractor} /><Input label="LA Number of Dependents" id="laDependents" name="laDependents" type="number" min="0" value={data.laDependents} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">LA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="laExemptStateTax" name="laExemptStateTax" checked={data.laExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'ME' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Maine uses Form W-4ME. Withholding is based on filing status and allowances.</p></div><Select label="ME State Filing Status" id="meFilingStatus" name="meFilingStatus" value={data.meFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="ME State Allowances" id="meAllowances" name="meAllowances" type="number" min="0" value={data.meAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">ME Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="meExemptStateTax" name="meExemptStateTax" checked={data.meExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'MD' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Maryland uses Form MW507. Withholding is based on filing status, exemptions, and a county-level tax.</p></div><Select label="MD State Filing Status" id="mdFilingStatus" name="mdFilingStatus" value={data.mdFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married_jointly">Married (filing jointly)</option><option value="married_separately">Married (filing separately)</option><option value="head_of_household">Head of Household</option><option value="dependent">Dependent</option></Select><Input label="MD Total Exemptions" id="mdExemptions" name="mdExemptions" type="number" min="0" value={data.mdExemptions} onChange={handleChange} disabled={isContractor} /><Select label="MD County" id="mdCounty" name="mdCounty" value={data.mdCounty} onChange={handleChange} disabled={isContractor} error={errors.mdCounty}>{marylandCountyOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</Select><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">MD Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="mdExemptStateTax" name="mdExemptStateTax" checked={data.mdExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from County Income Tax" id="mdExemptCountyTax" name="mdExemptCountyTax" checked={data.mdExemptCountyTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'MA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Massachusetts uses Form M-4. Withholding is based on filing status, exemptions, and additional withholding. MA also has a Paid Family and Medical Leave (PFML) contribution.</p></div><Select label="MA State Filing Status" id="maFilingStatus" name="maFilingStatus" value={data.maFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="MA Total Exemptions" id="maExemptions" name="maExemptions" type="number" min="0" value={data.maExemptions} onChange={handleChange} disabled={isContractor} /><Input label="MA Additional Withholding ($)" id="maAdditionalWithholding" name="maAdditionalWithholding" type="number" min="0" step="0.01" value={data.maAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">MA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="maExemptStateTax" name="maExemptStateTax" checked={data.maExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from Paid Family and Medical Leave (PFML)" id="maExemptPfml" name="maExemptPfml" checked={data.maExemptPfml} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'MI' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Michigan has a flat state tax. Withholding is adjusted by exemptions. Some cities (e.g., Detroit) also levy a city income tax based on residency.</p></div><Input label="MI Personal & Dependent Exemptions" id="miAllowances" name="miAllowances" type="number" min="0" value={data.miAllowances} onChange={handleChange} disabled={isContractor} /><Input label="MI Additional Withholding ($)" id="miAdditionalWithholding" name="miAdditionalWithholding" type="number" min="0" step="0.01" value={data.miAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><Input label="City of Residence (for local tax)" id="miCityOfResidence" name="miCityOfResidence" type="text" placeholder="e.g., Detroit, Grand Rapids" value={data.miCityOfResidence} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">MI Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="miExemptStateTax" name="miExemptStateTax" checked={data.miExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'MN' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Minnesota uses Form W-4MN. Withholding is based on filing status and allowances.</p></div><Select label="MN State Filing Status" id="mnFilingStatus" name="mnFilingStatus" value={data.mnFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="MN State Allowances" id="mnAllowances" name="mnAllowances" type="number" min="0" value={data.mnAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">MN Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="mnExemptStateTax" name="mnExemptStateTax" checked={data.mnExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'MS' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Mississippi uses Form 89-350. Withholding is based on filing status and total exemptions claimed.</p></div><Select label="MS State Filing Status" id="msFilingStatus" name="msFilingStatus" value={data.msFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_family">Head of Family</option></Select><Input label="MS Total Exemptions" id="msExemptions" name="msExemptions" type="number" min="0" value={data.msExemptions} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">MS Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="msExemptStateTax" name="msExemptStateTax" checked={data.msExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'MO' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Missouri uses Form MO W-4. Withholding is based on filing status and allowances.</p></div><Select label="MO State Filing Status" id="moFilingStatus" name="moFilingStatus" value={data.moFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married_one_income">Married (one income)</option><option value="married_both_working">Married (both working)</option><option value="head_of_household">Head of Household</option></Select><Input label="MO Allowances" id="moAllowances" name="moAllowances" type="number" min="0" value={data.moAllowances} onChange={handleChange} disabled={isContractor} /><Input label="MO Additional Withholding ($)" id="moAdditionalWithholding" name="moAdditionalWithholding" type="number" min="0" step="0.01" value={data.moAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">MO Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="moExemptStateTax" name="moExemptStateTax" checked={data.moExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'MT' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Montana uses Form MW-4. Withholding is based on total allowances and any additional withholding.</p></div><Input label="MT Allowances" id="mtAllowances" name="mtAllowances" type="number" min="0" value={data.mtAllowances} onChange={handleChange} disabled={isContractor} /><Input label="MT Additional Withholding ($)" id="mtAdditionalWithholding" name="mtAdditionalWithholding" type="number" min="0" step="0.01" value={data.mtAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">MT Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="mtExemptStateTax" name="mtExemptStateTax" checked={data.mtExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'NE' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Nebraska uses Form W-4N. Withholding is based on filing status and allowances.</p></div><Select label="NE State Filing Status" id="neFilingStatus" name="neFilingStatus" value={data.neFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="NE Allowances" id="neAllowances" name="neAllowances" type="number" min="0" value={data.neAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NE Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="neExemptStateTax" name="neExemptStateTax" checked={data.neExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'NV' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Nevada does not have a state income tax, so no state-level withholding information is required.</p></div>)}
                 {data.state === 'NH' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>New Hampshire does not have a state income tax on wages, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'NJ' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>New Jersey uses Form NJ-W4 and a progressive tax system based on specific filing status letters and allowances.</p></div><Select label="NJ State Filing Status" id="stateFilingStatus" name="stateFilingStatus" value={data.stateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="A">A (Single)</option><option value="B">B (Married/Civil Union, Separate)</option><option value="C">C (Married/Civil Union, Joint)</option><option value="D">D (Head of Household)</option><option value="E">E (Surviving Spouse/Civil Union)</option></Select><Input label="NJ State Allowances" id="stateAllowances" name="stateAllowances" type="number" min="0" value={data.stateAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NJ Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="njExemptStateTax" name="njExemptStateTax" checked={data.njExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from SUI/SDI (e.g., family employment)" id="njExemptSuiSdi" name="njExemptSuiSdi" checked={data.njExemptSuiSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from Family Leave Insurance (FLI)" id="njExemptFli" name="njExemptFli" checked={data.njExemptFli} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'NM' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>New Mexico uses Form FY-W-4. Withholding is based on total exemptions and any additional withholding.</p></div><Input label="NM Exemptions" id="nmExemptions" name="nmExemptions" type="number" min="0" value={data.nmExemptions} onChange={handleChange} disabled={isContractor} /><Input label="NM Additional Withholding ($)" id="nmAdditionalWithholding" name="nmAdditionalWithholding" type="number" min="0" step="0.01" value={data.nmAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NM Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="nmExemptStateTax" name="nmExemptStateTax" checked={data.nmExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'NY' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>New York withholding includes state tax (Form IT-2104) and potentially local tax for cities like NYC and Yonkers.</p></div><Select label="NY State Filing Status" id="nyStateFilingStatus" name="nyStateFilingStatus" value={data.nyStateFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="NY State Allowances" id="nyStateAllowances" name="nyStateAllowances" type="number" min="0" value={data.nyStateAllowances} onChange={handleChange} disabled={isContractor} /><Input label="NY Additional Withholding ($)" id="nyAdditionalWithholding" name="nyAdditionalWithholding" type="number" min="0" step="0.01" value={data.nyAdditionalWithholding} onChange={handleChange} disabled={isContractor} error={errors.nyAdditionalWithholding} /><Select label="NY Work City (for local tax)" id="nyWorkCity" name="nyWorkCity" value={data.nyWorkCity} onChange={handleChange} disabled={isContractor}><option value="none">Outside NYC / Yonkers</option><option value="nyc">New York City</option><option value="yonkers">Yonkers</option></Select><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NY Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="nyExemptStateTax" name="nyExemptStateTax" checked={data.nyExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from State Disability Insurance (NYSDI)" id="nyExemptSdi" name="nyExemptSdi" checked={data.nyExemptSdi} onChange={handleChange} disabled={isContractor} /><Checkbox label="Employee has a waiver for Paid Family Leave (PFL)" id="nyPflWaiver" name="nyPflWaiver" checked={data.nyPflWaiver} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'NC' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>North Carolina uses Form NC-4. Withholding is based on filing status, allowances, and any additional withholding.</p></div><Select label="NC State Filing Status" id="ncFilingStatus" name="ncFilingStatus" value={data.ncFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="NC Allowances" id="ncAllowances" name="ncAllowances" type="number" min="0" value={data.ncAllowances} onChange={handleChange} disabled={isContractor} /><Input label="NC Additional Withholding ($)" id="ncAdditionalWithholding" name="ncAdditionalWithholding" type="number" min="0" step="0.01" value={data.ncAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">NC Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="ncExemptStateTax" name="ncExemptStateTax" checked={data.ncExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'ND' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>North Dakota uses Form NDW-R. Withholding is based on filing status and allowances.</p></div><Select label="ND State Filing Status" id="ndFilingStatus" name="ndFilingStatus" value={data.ndFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="ND Allowances" id="ndAllowances" name="ndAllowances" type="number" min="0" value={data.ndAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">ND Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="ndExemptStateTax" name="ndExemptStateTax" checked={data.ndExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'OH' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Ohio has a progressive state income tax. Local municipal taxes are also withheld based on the work location.</p></div><Input label="OH Allowances (Form IT 4)" id="ohAllowances" name="ohAllowances" type="number" min="0" value={data.ohAllowances} onChange={handleChange} disabled={isContractor} /><Input label="OH Additional Withholding ($)" id="ohAdditionalWithholding" name="ohAdditionalWithholding" type="number" min="0" step="0.01" value={data.ohAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><Input label="Work Municipality/City" id="ohMunicipality" name="ohMunicipality" type="text" placeholder="e.g., Columbus" value={data.ohMunicipality} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">OH Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="ohExemptStateTax" name="ohExemptStateTax" checked={data.ohExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'OK' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Oklahoma uses Form OK-W-4. Withholding is based on filing status and allowances.</p></div><Select label="OK State Filing Status" id="okFilingStatus" name="okFilingStatus" value={data.okFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="OK Allowances" id="okAllowances" name="okAllowances" type="number" min="0" value={data.okAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">OK Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="okExemptStateTax" name="okExemptStateTax" checked={data.okExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'OR' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Oregon uses Form OR-W-4. Withholding is based on filing status, allowances, and any additional amount requested.</p></div><Select label="OR State Filing Status" id="orFilingStatus" name="orFilingStatus" value={data.orFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="married_separately">Married Filing Separately</option></Select><Input label="OR State Allowances (Form OR-W-4)" id="orAllowances" name="orAllowances" type="number" min="0" value={data.orAllowances} onChange={handleChange} disabled={isContractor} /><Input label="OR Additional Withholding ($)" id="orAdditionalWithholding" name="orAdditionalWithholding" type="number" min="0" step="0.01" value={data.orAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">OR Tax Exemptions</h4><Checkbox label="Claim exemption from state income tax" id="orExempt" name="orExempt" checked={data.orExempt} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'PA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Pennsylvania has a flat 3.07% state income tax. Local taxes (EIT/LST) are also withheld based on PSD codes.</p></div><Input label="Residency PSD Code" id="paResidencyPsdCode" name="paResidencyPsdCode" type="text" placeholder="e.g., 880000" value={data.paResidencyPsdCode} onChange={handleChange} disabled={isContractor} /><Input label="Workplace PSD Code" id="paWorkplacePsdCode" name="paWorkplacePsdCode" type="text" placeholder="e.g., 700101" value={data.paWorkplacePsdCode} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">PA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="paExemptStateTax" name="paExemptStateTax" checked={data.paExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from Local Services Tax (LST)" id="paIsExemptLST" name="paIsExemptLST" checked={data.paIsExemptLST} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'RI' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Rhode Island uses Form RI W-4. Withholding is based on allowances. RI also has a mandatory Temporary Disability Insurance (TDI) contribution.</p></div><Input label="RI Allowances" id="riAllowances" name="riAllowances" type="number" min="0" value={data.riAllowances} onChange={handleChange} disabled={isContractor} /><Input label="RI Additional Withholding ($)" id="riAdditionalWithholding" name="riAdditionalWithholding" type="number" min="0" step="0.01" value={data.riAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">RI Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="riExemptStateTax" name="riExemptStateTax" checked={data.riExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from Temporary Disability Insurance (TDI)" id="riExemptTdi" name="riExemptTdi" checked={data.riExemptTdi} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'SC' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>South Carolina uses Form SC W-4. Withholding is based on filing status, exemptions, and any additional withholding.</p></div><Select label="SC State Filing Status" id="scFilingStatus" name="scFilingStatus" value={data.scFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="SC Exemptions" id="scExemptions" name="scExemptions" type="number" min="0" value={data.scExemptions} onChange={handleChange} disabled={isContractor} /><Input label="SC Additional Withholding ($)" id="scAdditionalWithholding" name="scAdditionalWithholding" type="number" min="0" step="0.01" value={data.scAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">SC Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="scExemptStateTax" name="scExemptStateTax" checked={data.scExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'SD' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>South Dakota does not have a state income tax, so no state-level withholding information is required.</p></div>)}
                 {data.state === 'TN' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Tennessee does not have a state income tax on wages, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'TX' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Texas does not have a state income tax, so no state-level withholding information is required.</p></div>)}
+                {data.state === 'UT' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Utah has a flat state income tax. Withholding is based on filing status and allowances from Form TC-941.</p></div><Select label="UT State Filing Status" id="utFilingStatus" name="utFilingStatus" value={data.utFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option></Select><Input label="UT Allowances" id="utAllowances" name="utAllowances" type="number" min="0" value={data.utAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">UT Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="utExemptStateTax" name="utExemptStateTax" checked={data.utExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'VT' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Vermont uses Form W-4VT. Withholding is based on filing status and allowances.</p></div><Select label="VT State Filing Status" id="vtFilingStatus" name="vtFilingStatus" value={data.vtFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married">Married</option><option value="head_of_household">Head of Household</option></Select><Input label="VT Allowances" id="vtAllowances" name="vtAllowances" type="number" min="0" value={data.vtAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">VT Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="vtExemptStateTax" name="vtExemptStateTax" checked={data.vtExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'VA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Virginia uses Form VA-4. Withholding is based on the number of personal and dependent exemptions claimed.</p></div><Input label="VA Personal Exemptions" id="vaPersonalExemptions" name="vaPersonalExemptions" type="number" min="0" value={data.vaPersonalExemptions} onChange={handleChange} disabled={isContractor} /><Input label="VA Dependent Exemptions" id="vaDependentExemptions" name="vaDependentExemptions" type="number" min="0" value={data.vaDependentExemptions} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">VA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="vaExemptStateTax" name="vaExemptStateTax" checked={data.vaExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'WA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Washington does not have a state income tax. It does have a mandatory Paid Family and Medical Leave (PFML) premium.</p></div><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">WA Tax Exemptions</h4><Checkbox label="Exempt from Paid Family and Medical Leave (PFML)" id="waExemptPfml" name="waExemptPfml" checked={data.waExemptPfml} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'WV' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>West Virginia uses Form WV/IT-104. Withholding is based on the number of allowances claimed.</p></div><Input label="WV Allowances" id="wvAllowances" name="wvAllowances" type="number" min="0" value={data.wvAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-1"></div><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">WV Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="wvExemptStateTax" name="wvExemptStateTax" checked={data.wvExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
+                {data.state === 'WI' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Wisconsin uses Form WT-4. Withholding is based on filing status and allowances.</p></div><Select label="WI State Filing Status" id="wiFilingStatus" name="wiFilingStatus" value={data.wiFilingStatus} onChange={handleChange} disabled={isContractor}><option value="single">Single</option><option value="married_joint">Married (filing jointly)</option><option value="married_separate">Married (filing separately)</option><option value="head_of_household">Head of Household</option></Select><Input label="WI Allowances" id="wiAllowances" name="wiAllowances" type="number" min="0" value={data.wiAllowances} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">WI Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="wiExemptStateTax" name="wiExemptStateTax" checked={data.wiExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
                 {data.state === 'WY' && (<div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Wyoming does not have a state income tax, so no state-level withholding information is required.</p></div>)}
-                {data.state === 'OH' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Ohio has a progressive state income tax. Local municipal taxes are also withheld based on the work location.</p></div><Input label="OH Allowances (Form IT 4)" id="ohAllowances" name="ohAllowances" type="number" min="0" value={data.ohAllowances} onChange={handleChange} disabled={isContractor} /><Input label="OH Additional Withholding ($)" id="ohAdditionalWithholding" name="ohAdditionalWithholding" type="number" min="0" step="0.01" value={data.ohAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><Input label="Work Municipality/City" id="ohMunicipality" name="ohMunicipality" type="text" placeholder="e.g., Columbus" value={data.ohMunicipality} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">OH Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="ohExemptStateTax" name="ohExemptStateTax" checked={data.ohExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'PA' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Pennsylvania has a flat 3.07% state income tax. Local taxes (EIT/LST) are also withheld based on PSD codes.</p></div><Input label="Residency PSD Code" id="paResidencyPsdCode" name="paResidencyPsdCode" type="text" placeholder="e.g., 880000" value={data.paResidencyPsdCode} onChange={handleChange} disabled={isContractor} /><Input label="Workplace PSD Code" id="paWorkplacePsdCode" name="paWorkplacePsdCode" type="text" placeholder="e.g., 700101" value={data.paWorkplacePsdCode} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">PA Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="paExemptStateTax" name="paExemptStateTax" checked={data.paExemptStateTax} onChange={handleChange} disabled={isContractor} /><Checkbox label="Exempt from Local Services Tax (LST)" id="paIsExemptLST" name="paIsExemptLST" checked={data.paIsExemptLST} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'MI' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Michigan has a flat state tax. Withholding is adjusted by exemptions. Some cities (e.g., Detroit) also levy a city income tax based on residency.</p></div><Input label="MI Personal & Dependent Exemptions" id="miAllowances" name="miAllowances" type="number" min="0" value={data.miAllowances} onChange={handleChange} disabled={isContractor} /><Input label="MI Additional Withholding ($)" id="miAdditionalWithholding" name="miAdditionalWithholding" type="number" min="0" step="0.01" value={data.miAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><Input label="City of Residence (for local tax)" id="miCityOfResidence" name="miCityOfResidence" type="text" placeholder="e.g., Detroit, Grand Rapids" value={data.miCityOfResidence} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">MI Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="miExemptStateTax" name="miExemptStateTax" checked={data.miExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
-                {data.state === 'KY' && (<><div className="md:col-span-2 bg-blue-50 p-3 rounded-md text-sm text-blue-800"><p>Kentucky has a flat state income tax. Local occupational taxes are also withheld based on the work location.</p></div><Input label="KY Allowances (Tax Credits)" id="kyAllowances" name="kyAllowances" type="number" min="0" value={data.kyAllowances} onChange={handleChange} disabled={isContractor} /><Input label="KY Additional Withholding ($)" id="kyAdditionalWithholding" name="kyAdditionalWithholding" type="number" min="0" step="0.01" value={data.kyAdditionalWithholding} onChange={handleChange} disabled={isContractor} /><Input label="Work County/City (for local tax)" id="kyWorkLocation" name="kyWorkLocation" type="text" placeholder="e.g., Louisville" value={data.kyWorkLocation} onChange={handleChange} disabled={isContractor} /><div className="md:col-span-2 space-y-3 pt-2"><h4 className="font-semibold text-gray-600 text-sm">KY Tax Exemptions</h4><Checkbox label="Exempt from State Income Tax" id="kyExemptStateTax" name="kyExemptStateTax" checked={data.kyExemptStateTax} onChange={handleChange} disabled={isContractor} /></div></>)}
             </Section>
 
             <div className="border-t border-gray-200 pt-6 text-center">
@@ -660,6 +930,43 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                         <Input label="KY State Income Tax" id="sugg-ky-sit" value={suggestedTaxes.kyStateIncomeTax.toFixed(2)} readOnly disabled />
                         <Input label="KY Local Occ. Tax" id="sugg-ky-lit" value={suggestedTaxes.kyLocalIncomeTax.toFixed(2)} readOnly disabled />
                     </>)}
+                    {data.state === 'CO' && <Input label="CO State Income Tax" id="sugg-co-sit" value={suggestedTaxes.coStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'CT' && <Input label="CT State Income Tax" id="sugg-ct-sit" value={suggestedTaxes.ctStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'HI' && <Input label="HI State Income Tax" id="sugg-hi-sit" value={suggestedTaxes.hiStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'ID' && <Input label="ID State Income Tax" id="sugg-id-sit" value={suggestedTaxes.idStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'IL' && <Input label="IL State Income Tax" id="sugg-il-sit" value={suggestedTaxes.ilStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'IA' && <Input label="IA State Income Tax" id="sugg-ia-sit" value={suggestedTaxes.iaStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'KS' && <Input label="KS State Income Tax" id="sugg-ks-sit" value={suggestedTaxes.ksStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'LA' && <Input label="LA State Income Tax" id="sugg-la-sit" value={suggestedTaxes.laStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'ME' && <Input label="ME State Income Tax" id="sugg-me-sit" value={suggestedTaxes.meStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'MD' && (<>
+                        <Input label="MD State Income Tax" id="sugg-md-sit" value={suggestedTaxes.mdStateIncomeTax.toFixed(2)} readOnly disabled />
+                        <Input label="MD County Income Tax" id="sugg-md-cit" value={suggestedTaxes.mdCountyIncomeTax.toFixed(2)} readOnly disabled />
+                    </>)}
+                    {data.state === 'MA' && (<>
+                        <Input label="MA State Income Tax" id="sugg-ma-sit" value={suggestedTaxes.maStateIncomeTax.toFixed(2)} readOnly disabled />
+                        <Input label="MA PFML Contribution" id="sugg-ma-pfml" value={suggestedTaxes.maPFML.toFixed(2)} readOnly disabled />
+                    </>)}
+                    {data.state === 'MN' && <Input label="MN State Income Tax" id="sugg-mn-sit" value={suggestedTaxes.mnStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'MS' && <Input label="MS State Income Tax" id="sugg-ms-sit" value={suggestedTaxes.msStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'MO' && <Input label="MO State Income Tax" id="sugg-mo-sit" value={suggestedTaxes.moStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'MT' && <Input label="MT State Income Tax" id="sugg-mt-sit" value={suggestedTaxes.mtStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'NE' && <Input label="NE State Income Tax" id="sugg-ne-sit" value={suggestedTaxes.neStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'NM' && <Input label="NM State Income Tax" id="sugg-nm-sit" value={suggestedTaxes.nmStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'NC' && <Input label="NC State Income Tax" id="sugg-nc-sit" value={suggestedTaxes.ncStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'ND' && <Input label="ND State Income Tax" id="sugg-nd-sit" value={suggestedTaxes.ndStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'OK' && <Input label="OK State Income Tax" id="sugg-ok-sit" value={suggestedTaxes.okStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'RI' && (<>
+                        <Input label="RI State Income Tax" id="sugg-ri-sit" value={suggestedTaxes.riStateIncomeTax.toFixed(2)} readOnly disabled />
+                        <Input label="RI TDI" id="sugg-ri-tdi" value={suggestedTaxes.riTDI.toFixed(2)} readOnly disabled />
+                    </>)}
+                    {data.state === 'SC' && <Input label="SC State Income Tax" id="sugg-sc-sit" value={suggestedTaxes.scStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'UT' && <Input label="UT State Income Tax" id="sugg-ut-sit" value={suggestedTaxes.utStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'VT' && <Input label="VT State Income Tax" id="sugg-vt-sit" value={suggestedTaxes.vtStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'VA' && <Input label="VA State Income Tax" id="sugg-va-sit" value={suggestedTaxes.vaStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'WA' && <Input label="WA PFML Contribution" id="sugg-wa-pfml" value={suggestedTaxes.waPFML.toFixed(2)} readOnly disabled />}
+                    {data.state === 'WV' && <Input label="WV State Income Tax" id="sugg-wv-sit" value={suggestedTaxes.wvStateIncomeTax.toFixed(2)} readOnly disabled />}
+                    {data.state === 'WI' && <Input label="WI State Income Tax" id="sugg-wi-sit" value={suggestedTaxes.wiStateIncomeTax.toFixed(2)} readOnly disabled />}
                 </Section>
             )}
 

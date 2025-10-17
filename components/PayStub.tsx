@@ -1,5 +1,4 @@
 
-
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import type { PayStubData } from '../types';
 
@@ -46,6 +45,34 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const isPA = employeeInfo.state === 'PA';
     const isMI = employeeInfo.state === 'MI';
     const isKY = employeeInfo.state === 'KY';
+    const isCO = employeeInfo.state === 'CO';
+    const isCT = employeeInfo.state === 'CT';
+    const isHI = employeeInfo.state === 'HI';
+    const isID = employeeInfo.state === 'ID';
+    const isIL = employeeInfo.state === 'IL';
+    const isIA = employeeInfo.state === 'IA';
+    const isKS = employeeInfo.state === 'KS';
+    const isLA = employeeInfo.state === 'LA';
+    const isME = employeeInfo.state === 'ME';
+    const isMD = employeeInfo.state === 'MD';
+    const isMA = employeeInfo.state === 'MA';
+    const isMN = employeeInfo.state === 'MN';
+    const isMS = employeeInfo.state === 'MS';
+    const isMO = employeeInfo.state === 'MO';
+    const isMT = employeeInfo.state === 'MT';
+    const isNE = employeeInfo.state === 'NE';
+    const isNM = employeeInfo.state === 'NM';
+    const isNC = employeeInfo.state === 'NC';
+    const isND = employeeInfo.state === 'ND';
+    const isOK = employeeInfo.state === 'OK';
+    const isRI = employeeInfo.state === 'RI';
+    const isSC = employeeInfo.state === 'SC';
+    const isUT = employeeInfo.state === 'UT';
+    const isVT = employeeInfo.state === 'VT';
+    const isVA = employeeInfo.state === 'VA';
+    const isWA = employeeInfo.state === 'WA';
+    const isWV = employeeInfo.state === 'WV';
+    const isWI = employeeInfo.state === 'WI';
     const printContainerRef = useRef<HTMLDivElement>(null);
 
     const { taxes } = deductions;
@@ -73,6 +100,34 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const totalPATaxes = isPA && taxes ? (taxes.paStateIncomeTax + taxes.paLocalIncomeTax) : 0;
     const totalMITaxes = isMI && taxes ? (taxes.miStateIncomeTax + taxes.miLocalIncomeTax) : 0;
     const totalKYTaxes = isKY && taxes ? (taxes.kyStateIncomeTax + taxes.kyLocalIncomeTax) : 0;
+    const totalCOTaxes = isCO && taxes ? taxes.coStateIncomeTax : 0;
+    const totalCTTaxes = isCT && taxes ? taxes.ctStateIncomeTax : 0;
+    const totalHITaxes = isHI && taxes ? taxes.hiStateIncomeTax : 0;
+    const totalIDTaxes = isID && taxes ? taxes.idStateIncomeTax : 0;
+    const totalILTaxes = isIL && taxes ? taxes.ilStateIncomeTax : 0;
+    const totalIATaxes = isIA && taxes ? taxes.iaStateIncomeTax : 0;
+    const totalKSTaxes = isKS && taxes ? taxes.ksStateIncomeTax : 0;
+    const totalLATaxes = isLA && taxes ? taxes.laStateIncomeTax : 0;
+    const totalMETaxes = isME && taxes ? taxes.meStateIncomeTax : 0;
+    const totalMDTaxes = isMD && taxes ? (taxes.mdStateIncomeTax + taxes.mdCountyIncomeTax) : 0;
+    const totalMATaxes = isMA && taxes ? (taxes.maStateIncomeTax + taxes.maPFML) : 0;
+    const totalMNTaxes = isMN && taxes ? taxes.mnStateIncomeTax : 0;
+    const totalMSTaxes = isMS && taxes ? taxes.msStateIncomeTax : 0;
+    const totalMOTaxes = isMO && taxes ? taxes.moStateIncomeTax : 0;
+    const totalMTTaxes = isMT && taxes ? taxes.mtStateIncomeTax : 0;
+    const totalNETaxes = isNE && taxes ? taxes.neStateIncomeTax : 0;
+    const totalNMTaxes = isNM && taxes ? taxes.nmStateIncomeTax : 0;
+    const totalNCTaxes = isNC && taxes ? taxes.ncStateIncomeTax : 0;
+    const totalNDTaxes = isND && taxes ? taxes.ndStateIncomeTax : 0;
+    const totalOKTaxes = isOK && taxes ? taxes.okStateIncomeTax : 0;
+    const totalRITaxes = isRI && taxes ? (taxes.riStateIncomeTax + taxes.riTDI) : 0;
+    const totalSCTaxes = isSC && taxes ? taxes.scStateIncomeTax : 0;
+    const totalUTTaxes = isUT && taxes ? taxes.utStateIncomeTax : 0;
+    const totalVTTaxes = isVT && taxes ? taxes.vtStateIncomeTax : 0;
+    const totalVATaxes = isVA && taxes ? taxes.vaStateIncomeTax : 0;
+    const totalWATaxes = isWA && taxes ? (taxes.waStateIncomeTax + taxes.waPFML) : 0; // waStateIncomeTax is 0
+    const totalWVTaxes = isWV && taxes ? taxes.wvStateIncomeTax : 0;
+    const totalWITaxes = isWI && taxes ? taxes.wiStateIncomeTax : 0;
 
 
     const handlePrint = () => {
@@ -353,6 +408,103 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
                                         <StubRow label="Local Occ. Tax" value={-taxes.kyLocalIncomeTax} />
                                     </>
                                 )}
+                                
+                                {isCO && totalCOTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">COLORADO TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.coStateIncomeTax} />
+                                    </>
+                                )}
+                                
+                                {isCT && totalCTTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">CONNECTICUT TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.ctStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isHI && totalHITaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">HAWAII TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.hiStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isID && totalIDTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">IDAHO TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.idStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isIL && totalILTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">ILLINOIS TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.ilStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isIA && totalIATaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">IOWA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.iaStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isKS && totalKSTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">KANSAS TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.ksStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isLA && totalLATaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">LOUISIANA TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.laStateIncomeTax} />
+                                    </>
+                                )}
+
+                                {isME && totalMETaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">MAINE TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.meStateIncomeTax} />
+                                    </>
+                                )}
+                                
+                                {isMD && totalMDTaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">MARYLAND TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.mdStateIncomeTax} />
+                                        <StubRow label="County Income Tax" value={-taxes.mdCountyIncomeTax} />
+                                    </>
+                                )}
+
+                                {isMA && totalMATaxes > 0 && (
+                                    <>
+                                        <p className="text-xs font-semibold text-gray-500 mt-2">MASSACHUSETTS TAXES</p>
+                                        <StubRow label="State Income Tax" value={-taxes.maStateIncomeTax} />
+                                        <StubRow label="Paid Family & Medical Leave" value={-taxes.maPFML} />
+                                    </>
+                                )}
+                                
+                                {isMN && totalMNTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">MINNESOTA TAXES</p> <StubRow label="State Income Tax" value={-taxes.mnStateIncomeTax} /> </> )}
+                                {isMS && totalMSTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">MISSISSIPPI TAXES</p> <StubRow label="State Income Tax" value={-taxes.msStateIncomeTax} /> </> )}
+                                {isMO && totalMOTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">MISSOURI TAXES</p> <StubRow label="State Income Tax" value={-taxes.moStateIncomeTax} /> </> )}
+                                {isMT && totalMTTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">MONTANA TAXES</p> <StubRow label="State Income Tax" value={-taxes.mtStateIncomeTax} /> </> )}
+                                {isNE && totalNETaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">NEBRASKA TAXES</p> <StubRow label="State Income Tax" value={-taxes.neStateIncomeTax} /> </> )}
+                                {isNM && totalNMTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">NEW MEXICO TAXES</p> <StubRow label="State Income Tax" value={-taxes.nmStateIncomeTax} /> </> )}
+                                {isNC && totalNCTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">NORTH CAROLINA TAXES</p> <StubRow label="State Income Tax" value={-taxes.ncStateIncomeTax} /> </> )}
+                                {isND && totalNDTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">NORTH DAKOTA TAXES</p> <StubRow label="State Income Tax" value={-taxes.ndStateIncomeTax} /> </> )}
+                                {isOK && totalOKTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">OKLAHOMA TAXES</p> <StubRow label="State Income Tax" value={-taxes.okStateIncomeTax} /> </> )}
+                                {isRI && totalRITaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">RHODE ISLAND TAXES</p> <StubRow label="State Income Tax" value={-taxes.riStateIncomeTax} /> <StubRow label="Temporary Disability (TDI)" value={-taxes.riTDI} /> </> )}
+                                {isSC && totalSCTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">SOUTH CAROLINA TAXES</p> <StubRow label="State Income Tax" value={-taxes.scStateIncomeTax} /> </> )}
+                                {isUT && totalUTTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">UTAH TAXES</p> <StubRow label="State Income Tax" value={-taxes.utStateIncomeTax} /> </> )}
+                                {isVT && totalVTTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">VERMONT TAXES</p> <StubRow label="State Income Tax" value={-taxes.vtStateIncomeTax} /> </> )}
+                                {isVA && totalVATaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">VIRGINIA TAXES</p> <StubRow label="State Income Tax" value={-taxes.vaStateIncomeTax} /> </> )}
+                                {isWA && totalWATaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">WASHINGTON TAXES</p> <StubRow label="Paid Family & Medical Leave" value={-taxes.waPFML} /> </> )}
+                                {isWV && totalWVTaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">WEST VIRGINIA TAXES</p> <StubRow label="State Income Tax" value={-taxes.wvStateIncomeTax} /> </> )}
+                                {isWI && totalWITaxes > 0 && ( <> <p className="text-xs font-semibold text-gray-500 mt-2">WISCONSIN TAXES</p> <StubRow label="State Income Tax" value={-taxes.wiStateIncomeTax} /> </> )}
 
                                 <div className="border-t my-2"></div>
                                 <StubRow label="Total Taxes" value={-totalTaxes} />
