@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { PayrollForm, initialFormData } from './components/PayrollForm';
 import { PayStub } from './components/PayStub';
 import { PayStubPreview } from './components/PayStubPreview';
@@ -14,7 +13,7 @@ import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } f
 
 // Define a type for the imperative handle ref
 interface PayStubRef {
-  handlePrint: () => void;
+  handlePrint: () => Promise<void>;
 }
 
 const defaultCompanyInfo: CompanyInfo = {
@@ -47,6 +46,9 @@ function App() {
 
   // State for suggested taxes
   const [suggestedTaxes, setSuggestedTaxes] = useState<Taxes | null>(null);
+  
+  // State for printing
+  const [isPrinting, setIsPrinting] = useState<boolean>(false);
 
   useEffect(() => {
     try {
@@ -60,7 +62,7 @@ function App() {
   }, []);
 
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
@@ -76,9 +78,9 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [formData, companyInfo]);
   
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setPayStubData(null);
     setFormData(initialFormData);
     setError(null);
@@ -93,13 +95,22 @@ function App() {
     setIsFormsLoading(false);
     // reset suggested taxes
     setSuggestedTaxes(null);
-  };
+  }, []);
 
-  const handlePrint = () => {
-    payStubRef.current?.handlePrint();
-  };
+  const handlePrint = useCallback(async () => {
+    if (isPrinting) return;
+    setIsPrinting(true);
+    try {
+        await payStubRef.current?.handlePrint();
+    } catch (error) {
+        console.error("Printing failed", error);
+        alert("An error occurred while trying to generate the PDF. Please try again.");
+    } finally {
+        setIsPrinting(false);
+    }
+  }, [isPrinting]);
 
-  const handleCheckCompliance = async () => {
+  const handleCheckCompliance = useCallback(async () => {
     if (!payStubData) return;
 
     setIsReportModalOpen(true);
@@ -116,14 +127,14 @@ function App() {
     } finally {
       setIsReportLoading(false);
     }
-  };
+  }, [payStubData, formData]);
   
-  const closeReportModal = () => {
+  const closeReportModal = useCallback(() => {
       setIsReportModalOpen(false);
-  }
+  }, []);
 
   // Handler for fetching required forms
-  const handleViewForms = async () => {
+  const handleViewForms = useCallback(async () => {
     setIsFormsModalOpen(true);
     setIsFormsLoading(true);
     setRequiredForms(null);
@@ -137,23 +148,23 @@ function App() {
     } finally {
       setIsFormsLoading(false);
     }
-  };
+  }, [formData]);
   
-  const closeFormsModal = () => {
+  const closeFormsModal = useCallback(() => {
     setIsFormsModalOpen(false);
-  }
+  }, []);
   
-  const handleSaveSettings = (newInfo: CompanyInfo) => {
+  const handleSaveSettings = useCallback((newInfo: CompanyInfo) => {
     setCompanyInfo(newInfo);
     try {
       localStorage.setItem('companyInfo', JSON.stringify(newInfo));
     } catch (error) {
       console.error("Failed to save company info to localStorage", error);
     }
-  };
+  }, []);
 
-  const openSettingsModal = () => setIsSettingsModalOpen(true);
-  const closeSettingsModal = () => setIsSettingsModalOpen(false);
+  const openSettingsModal = useCallback(() => setIsSettingsModalOpen(true), []);
+  const closeSettingsModal = useCallback(() => setIsSettingsModalOpen(false), []);
 
 
   return (
@@ -187,8 +198,8 @@ function App() {
                  <button onClick={handleReset} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-md hover:shadow-lg">
                     Calculate Another
                   </button>
-                  <button onClick={handlePrint} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-md hover:shadow-lg">
-                    Print PDF
+                  <button onClick={handlePrint} disabled={isPrinting} className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    {isPrinting ? 'Generating PDF...' : 'Print PDF'}
                   </button>
                   <button onClick={handleCheckCompliance} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ease-in-out shadow-md hover:shadow-lg">
                     Check Compliance
