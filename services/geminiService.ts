@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from '../types';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
@@ -414,10 +413,10 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       11. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
       12. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
       13. For Florida, Alaska, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Wyoming: State income tax MUST be 0 as there is no state income tax on wages.
-      14. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0.
+      14. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0. Otherwise, calculate state tax based on the provided filing status and number of dependents. Use this information to apply the correct standard deduction and dependent exemption amounts to determine taxable income before applying the tax rates.
       15. For Arizona: If \`azExemptStateTax\` is true, \`azStateIncomeTax\` MUST be 0. Otherwise, calculate it based on the specified withholding rate.
       16. For Arkansas: If \`arExemptStateTax\` is true, \`arStateIncomeTax\` MUST be 0.
-      17. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0.
+      17. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0. Otherwise, calculate state tax using the filing status to determine the standard deduction. Then, subtract the value of dependent allowances and additional allowances to find the taxable income. The additional withholding amount should be added to the final calculated tax.
       18. For Ohio: If \`ohExemptStateTax\` is true, \`ohStateIncomeTax\` MUST be 0. Otherwise, calculate state tax based on progressive brackets and \`ohAllowances\`. Also calculate \`ohLocalIncomeTax\` based on the rate for the provided \`ohMunicipality\`.
       19. For Pennsylvania: If \`paExemptStateTax\` is true, \`paStateIncomeTax\` MUST be 0. Otherwise, it is a flat 3.07% of taxable income. The \`paLocalIncomeTax\` field MUST be the sum of two components: the Local Earned Income Tax (EIT) and the Local Services Tax (LST). EIT is based on the higher of the residency or workplace rate (determined by PSD codes). LST is a flat annual fee (e.g., $52) prorated per pay period, unless \`paIsExemptLST\` is true (in which case LST component is 0).
       20. For Michigan: If \`miExemptStateTax\` is true, \`miStateIncomeTax\` MUST be 0. Otherwise, it is a flat rate. Reduce taxable income by the exemption allowance amount multiplied by \`miAllowances\`. Additionally, if \`miCityOfResidence\` is a city with an income tax (e.g., Detroit, Grand Rapids, Flint), calculate \`miLocalIncomeTax\` based on that city's resident income tax rate. If no city is provided or it has no income tax, this MUST be 0.
@@ -446,7 +445,7 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       43. For South Carolina: If \`scExemptStateTax\` is true, \`scStateIncomeTax\` MUST be 0.
       44. For Utah: If \`utExemptStateTax\` is true, \`utStateIncomeTax\` MUST be 0.
       45. For Vermont: If \`vtExemptStateTax\` is true, \`vtStateIncomeTax\` MUST be 0.
-      46. For Virginia: If \`vaExemptStateTax\` is true, \`vaStateIncomeTax\` MUST be 0.
+      46. For Virginia: If \`vaExemptStateTax\` is true, \`vaStateIncomeTax\` MUST be 0. Otherwise, calculate Virginia state tax using the provided number of personal and dependent exemptions to determine the total exemption amount, which reduces taxable income before applying the tax brackets.
       47. For Washington: \`waStateIncomeTax\` MUST be 0. If \`waExemptPfml\` is true, \`waPFML\` MUST be 0. Otherwise, calculate the WA Paid Family and Medical Leave premium.
       48. For West Virginia: If \`wvExemptStateTax\` is true, \`wvStateIncomeTax\` MUST be 0.
       49. For Wisconsin: If \`wiExemptStateTax\` is true, \`wiStateIncomeTax\` MUST be 0.
@@ -469,7 +468,7 @@ export async function calculateTaxesOnly(formData: PayrollFormData): Promise<Tax
     `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.5-flash-lite",
         contents: finalPrompt,
         config: {
             responseMimeType: "application/json",
@@ -490,27 +489,39 @@ export async function calculateTaxesOnly(formData: PayrollFormData): Promise<Tax
 // Fix: Implement the missing checkPayStubCompliance function.
 export async function checkPayStubCompliance(payStubData: PayStubData, formData: PayrollFormData): Promise<string> {
   const prompt = `
-    Act as a US payroll compliance expert. Analyze the provided pay stub data against federal and ${formData.state} state regulations for the current year.
-    Provide a concise compliance report. Identify any potential issues and suggest corrective actions if necessary.
-    The pay stub is for a pay period ending on ${formData.payPeriodEnd}.
-    
-    Pay Stub Data:
+    Act as a meticulous US payroll compliance auditor. Your task is to perform a detailed audit of the provided pay stub data using the original form data for context. The pay period ends on ${formData.payPeriodEnd} for the current year.
+
+    Pay Stub Data (The final calculated result):
     ${JSON.stringify(payStubData, null, 2)}
 
-    Form Data (for context on filing status, etc.):
+    Original Form Data (The inputs used for calculation):
     ${JSON.stringify(formData, null, 2)}
 
-    Focus on key compliance areas:
-    1.  Minimum Wage: Is the effective hourly rate (considering total earnings for hours worked) above the federal and state minimum wage?
-    2.  Tax Withholdings: Are the withholdings for Social Security, Medicare, Federal, and State taxes plausible for the given gross pay and filing status? (A high-level check is fine, not a full recalculation).
-    3.  Pay Stub Information: Does the pay stub contain all required information (e.g., employee/employer name, pay period dates, gross pay, itemized deductions, net pay)?
-    4.  State-Specific Requirements: Check for any ${formData.state}-specific requirements that might be relevant (e.g., paid sick leave accrual, specific deduction labeling).
+    Please perform a detailed audit focusing on the following areas. For each point, state clearly whether it is CORRECT or INCORRECT. If incorrect, you MUST provide the correct value and a brief explanation.
 
-    Provide the output as a clear, formatted report. Use markdown for headings and lists.
+    1.  **Calculation Accuracy:**
+        -   **Gross Pay:** Verify that the \`grossPay\` on the stub correctly sums all items in the \`earnings\` array.
+        -   **Total Deductions:** Verify that the \`totalDeductions\` on the stub correctly sums all pre-tax deductions, all taxes, and all post-tax deductions.
+        -   **Net Pay:** Verify that \`netPay\` is correctly calculated as \`grossPay\` - \`totalDeductions\`.
+
+    2.  **Tax Withholding Accuracy:**
+        -   **Recalculate and verify EACH tax amount** based on the provided form data and current federal and ${formData.state} state/local tax laws.
+        -   **Federal Income Tax:** Is the amount correct for the given filing status and taxable income?
+        -   **Social Security & Medicare (FICA):** Are these calculated correctly based on the gross pay?
+        -   **State & Local Taxes:** Are all applicable taxes for ${formData.state} (including state, county, city, SDI, PFML, etc.) calculated correctly?
+
+    3.  **Minimum Wage Compliance:**
+        -   Calculate the effective hourly rate (total earnings / total hours worked).
+        -   Verify if this rate is above the current federal AND ${formData.state} state minimum wage.
+
+    4.  **Pay Stub Information:**
+        -   Does the pay stub contain all legally required information for a pay statement in ${formData.state}? (e.g., employer/employee names, pay period, gross pay, itemized deductions, net pay).
+
+    Provide the final output as a clear, formatted report using markdown for headings and lists. Start with a summary of findings (e.g., "Compliance Check: PASSED" or "Compliance Check: FAILED with X issues found.").
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-flash-lite",
     contents: prompt,
   });
 
@@ -526,7 +537,7 @@ export async function getRequiredForms(formData: PayrollFormData): Promise<Requi
   `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-flash-lite",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -583,7 +594,7 @@ export async function calculatePayroll(formData: PayrollFormData, companyInfo: C
     `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.5-flash-lite",
         contents: finalPrompt,
         config: {
             responseMimeType: "application/json",
