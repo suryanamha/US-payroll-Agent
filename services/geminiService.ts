@@ -3,6 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from '../types';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
 import { MARYLAND_COUNTY_TAX_RATES } from '../data/MarylandCountyTaxRates';
+import { TAX_BRACKETS_2026 } from '../data/taxBrackets2026';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
 
@@ -173,6 +174,19 @@ const requiredFormsSchema = {
     },
 };
 
+/**
+ * Loads and returns the IRS's official 2026 tax inflation adjustments.
+ * Under the hood, this imports the data from a static file representing the
+ * parsed data from the IRS, including amendments from the OBBB.
+ * @returns The structured tax data for TY 2026.
+ */
+export function load2026TaxInflationAdjustments() {
+  // In a real-world scenario, this could fetch from a URL, parse a file, etc.
+  // Here, we return the imported static data structure.
+  return TAX_BRACKETS_2026;
+}
+
+
 // Helper function to safely look up Indiana county tax rates.
 const getIndianaCountyRate = (countyName: string): number => {
     if (!countyName) return 0;
@@ -190,6 +204,8 @@ const getMarylandCountyRate = (countyName: string): number => {
 };
 
 const buildBasePrompt = (formData: PayrollFormData) => {
+    const taxData2026 = load2026TaxInflationAdjustments();
+    const taxDataString = JSON.stringify(taxData2026, null, 2);
     const residenceCountyRateIN = getIndianaCountyRate(formData.inCountyOfResidence);
     const workCountyRateIN = getIndianaCountyRate(formData.inCountyOfWork);
     const countyRateMD = getMarylandCountyRate(formData.mdCounty);
@@ -389,11 +405,16 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - Post-tax Deductions: ${JSON.stringify(processedPostTaxDeductions)}
       
       Tax Calculation Guidelines (TY 2026 OBBB):
+      - CRITICAL: You MUST use the following official IRS tax data for all federal calculations. This data overrides any internal knowledge you have about 2026 tax laws.
+
+      Official IRS Tax Data for 2026 (OBBB):
+      ${taxDataString}
+      
       - IMPORTANT: If the worker type is 'contractor', all fields in the 'taxes' object (federalIncomeTax, socialSecurity, medicare, all state-specific taxes, etc.) MUST be 0. No tax should be withheld from a contractor.
       - IMPORTANT: If any state-specific exemption flag (e.g., 'njExemptStateTax', 'caExemptSdi', 'paIsExemptLST', etc.) provided in the 'Worker Data' is 'true', the corresponding tax amount MUST be calculated as 0. This rule overrides all other calculation logic for that specific tax.
-      - Social Security Tax: Calculate at 6.5% on gross wages up to the annual limit of $185,000.
-      - Medicare Tax: Calculate at 1.5% on all gross wages. There is no wage limit.
-      - Federal Income Tax: Withhold based on the employee's filing status and the 2026 federal tax brackets. AFTER calculating the initial tax liability, SUBTRACT the \`federalTaxCredit\` amount. The final tax cannot be negative. The concept of allowances is deprecated.
+      - Social Security Tax: Use the rate and wage limit from the official data provided.
+      - Medicare Tax: Use the rate from the official data provided.
+      - Federal Income Tax: Withhold based on the employee's filing status, the standard deduction, and the tax brackets from the official data provided. AFTER calculating the initial tax liability, SUBTRACT the \`federalTaxCredit\` amount. The final tax cannot be negative. The concept of allowances is deprecated.
       - State & Local Taxes: Apply the specific tax laws for ${formData.state} for 2026. Use the most current, publicly available tax tables and rules for all state-level calculations, keeping in mind the OBBB's simplification goals.
       - Taxable Income: For all taxes, the taxable income is the Gross Pay for the period MINUS the total of all *applicable* pre-tax deductions. This is a critical step.
 
