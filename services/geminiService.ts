@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from '../types';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
@@ -212,9 +213,9 @@ const buildBasePrompt = (formData: PayrollFormData) => {
     
     return {
         prompt: `
-      Act as a payroll calculation expert for the state of ${formData.state} for the current year.
+      Act as a payroll calculation expert for Tax Year 2026, operating under the new 'Omnibus Balanced Budget Bill' (OBBB) regulations for the state of ${formData.state}.
       Given the following worker and payroll information, calculate the required values.
-      Adhere strictly to all current federal and state tax laws for the specified state.
+      Adhere strictly to all 2026 federal and state tax laws for the specified state.
       Calculate all monetary values precisely to two decimal places.
 
       Worker Data:
@@ -230,9 +231,9 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - Overtime Rate Multiplier: ${formData.payType === 'hourly' && formData.overtimeHoursWorked > 0 ? formData.overtimeRateMultiplier : 'N/A'}
       - Bonus: $${formData.bonus > 0 ? formData.bonus : 'N/A'}
       - Federal Filing Status: ${formData.employeeType === 'employee' ? formData.federalFilingStatus : 'N/A'}
-      - Federal Allowances: ${formData.employeeType === 'employee' ? formData.federalAllowances : 'N/A'}
-      - NJ State Filing Status: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.stateFilingStatus : 'N/A'}
-      - NJ State Allowances: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.stateAllowances : 'N/A'}
+      - Federal Tax Credit ($ per period): ${formData.employeeType === 'employee' ? formData.federalTaxCredit : 'N/A'}
+      - NJ State Filing Status: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.njFilingStatus : 'N/A'}
+      - NJ State Tax Credit ($ per period): ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.njTaxCredit : 'N/A'}
       - NJ Exempt State Tax: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.njExemptStateTax : 'N/A'}
       - NJ Exempt SUI/SDI: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.njExemptSuiSdi : 'N/A'}
       - NJ Exempt FLI: ${formData.state === 'NJ' && formData.employeeType === 'employee' ? formData.njExemptFli : 'N/A'}
@@ -250,7 +251,7 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - IN Exempt State Tax: ${formData.state === 'IN' && formData.employeeType === 'employee' ? formData.inExemptStateTax : 'N/A'}
       - IN Exempt County Tax: ${formData.state === 'IN' && formData.employeeType === 'employee' ? formData.inExemptCountyTax : 'N/A'}
       - CA State Filing Status: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caFilingStatus : 'N/A'}
-      - CA State Allowances: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caAllowances : 'N/A'}
+      - CA State Tax Credit ($ per period): ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caTaxCredit : 'N/A'}
       - CA Estimated Deductions: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caEstimatedDeductions : 'N/A'}
       - CA Estimated Non-Wage Income: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caEstimatedNonWageIncome : 'N/A'}
       - CA Additional Withholding: ${formData.state === 'CA' && formData.employeeType === 'employee' ? formData.caAdditionalWithholding : 'N/A'}
@@ -283,8 +284,8 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - OH Exempt State Tax: ${formData.state === 'OH' && formData.employeeType === 'employee' ? formData.ohExemptStateTax : 'N/A'}
       - OH Municipality: ${formData.state === 'OH' && formData.employeeType === 'employee' ? formData.ohMunicipality : 'N/A'}
       - PA Exempt State Tax: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paExemptStateTax : 'N/A'}
-      - PA Residency PSD Code: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paResidencyPsdCode : 'N/A'}
-      - PA Workplace PSD Code: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paWorkplacePsdCode : 'N/A'}
+      - PA Residency Municipality: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paResidencyMunicipality : 'N/A'}
+      - PA Workplace Municipality: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paWorkplaceMunicipality : 'N/A'}
       - PA LST Exempt: ${formData.state === 'PA' && formData.employeeType === 'employee' ? formData.paIsExemptLST : 'N/A'}
       - MI Allowances: ${formData.state === 'MI' && formData.employeeType === 'employee' ? formData.miAllowances : 'N/A'}
       - MI Additional Withholding: ${formData.state === 'MI' && formData.employeeType === 'employee' ? formData.miAdditionalWithholding : 'N/A'}
@@ -387,13 +388,13 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - Pre-tax Deductions: ${JSON.stringify(processedPreTaxDeductions)}
       - Post-tax Deductions: ${JSON.stringify(processedPostTaxDeductions)}
       
-      Tax Calculation Guidelines (Current Year):
+      Tax Calculation Guidelines (TY 2026 OBBB):
       - IMPORTANT: If the worker type is 'contractor', all fields in the 'taxes' object (federalIncomeTax, socialSecurity, medicare, all state-specific taxes, etc.) MUST be 0. No tax should be withheld from a contractor.
       - IMPORTANT: If any state-specific exemption flag (e.g., 'njExemptStateTax', 'caExemptSdi', 'paIsExemptLST', etc.) provided in the 'Worker Data' is 'true', the corresponding tax amount MUST be calculated as 0. This rule overrides all other calculation logic for that specific tax.
-      - Social Security Tax: Calculate at 6.2% on gross wages up to the annual limit of $168,600.
-      - Medicare Tax: Calculate at 1.45% on all gross wages. There is no wage limit.
-      - Federal Income Tax: Withhold based on the employee's filing status, allowances, and the current year's federal tax brackets (progressive rates: 10%, 12%, 22%, 24%, 32%, 35%, 37%). Use the percentage method for withholding calculations.
-      - State & Local Taxes: Apply the specific tax laws for ${formData.state}. Use the most current, publicly available tax tables and rules for all state-level calculations.
+      - Social Security Tax: Calculate at 6.5% on gross wages up to the annual limit of $185,000.
+      - Medicare Tax: Calculate at 1.5% on all gross wages. There is no wage limit.
+      - Federal Income Tax: Withhold based on the employee's filing status and the 2026 federal tax brackets. AFTER calculating the initial tax liability, SUBTRACT the \`federalTaxCredit\` amount. The final tax cannot be negative. The concept of allowances is deprecated.
+      - State & Local Taxes: Apply the specific tax laws for ${formData.state} for 2026. Use the most current, publicly available tax tables and rules for all state-level calculations, keeping in mind the OBBB's simplification goals.
       - Taxable Income: For all taxes, the taxable income is the Gross Pay for the period MINUS the total of all *applicable* pre-tax deductions. This is a critical step.
 
       Calculation Steps:
@@ -405,54 +406,17 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       3.  Determine which pre-tax deductions apply to this pay period based on their recurring schedule and the period end date ('${formData.payPeriodEnd}').
       4.  If the worker type is 'employee', calculate all applicable federal and state taxes based on the taxable income (gross pay minus applicable pre-tax deductions).
       5.  All state tax fields for states other than ${formData.state} (i.e., ${otherStates}) MUST be 0.
-      6.  For New Jersey: If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
+      6.  For New Jersey: Under OBBB, calculate state tax based on the simplified filing status. After calculating the initial tax, subtract the \`njTaxCredit\`. If \`njExemptStateTax\` is true, \`njStateIncomeTax\` MUST be 0. If \`njExemptSuiSdi\` is true, \`njSUI\` and \`njSDI\` MUST be 0. If \`njExemptFli\` is true, \`njFLI\` MUST be 0.
       7.  For New York: Calculate NY state income tax, NYSDI, and NYPFL. The \`nyAdditionalWithholding\` amount should be added to the calculated state income tax. Also, calculate \`nyLocalIncomeTax\` if \`nyWorkCity\` is 'nyc' (New York City) or 'yonkers'. Use the current tax rates for these cities. If \`nyWorkCity\` is 'none', the local tax MUST be 0. If \`nyExemptStateTax\` is true, \`nyStateIncomeTax\` MUST be 0. If \`nyPflWaiver\` is true, \`nyPaidFamilyLeave\` MUST be 0. If \`nyExemptSdi\` is true, \`nyDisabilityInsurance\` MUST be 0.
       8.  For Indiana: The rule for county tax is: use the residence county rate (${residenceCountyRateIN}) if available and > 0; otherwise, use the work county rate (${workCountyRateIN}). If both are 0, county tax is 0. If \`inExemptStateTax\` is true, \`inStateIncomeTax\` MUST be 0. If \`inExemptCountyTax\` is true, \`inCountyIncomeTax\` MUST be 0.
-      9.  For California: Calculate CA state income tax and SDI. Use the allowances, estimated deductions, estimated non-wage income, and additional withholding to determine the final state income tax amount. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
-      10. For Oregon: If \`orExempt\` is true, \`orStateIncomeTax\` MUST be 0.
-      11. For Delaware: If \`deExemptStateTax\` is true, \`deStateIncomeTax\` MUST be 0.
-      12. For District of Columbia: If \`dcExemptStateTax\` is true, \`dcStateIncomeTax\` MUST be 0.
-      13. For Florida, Alaska, Nevada, New Hampshire, South Dakota, Tennessee, Texas, Wyoming: State income tax MUST be 0 as there is no state income tax on wages.
-      14. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0. Otherwise, calculate state tax based on the provided filing status and number of dependents. Use this information to apply the correct standard deduction and dependent exemption amounts to determine taxable income before applying the tax rates.
-      15. For Arizona: If \`azExemptStateTax\` is true, \`azStateIncomeTax\` MUST be 0. Otherwise, calculate it based on the specified withholding rate.
-      16. For Arkansas: If \`arExemptStateTax\` is true, \`arStateIncomeTax\` MUST be 0.
-      17. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0. Otherwise, calculate state tax using the filing status to determine the standard deduction. Then, subtract the value of dependent allowances and additional allowances to find the taxable income. The additional withholding amount should be added to the final calculated tax.
-      18. For Ohio: If \`ohExemptStateTax\` is true, \`ohStateIncomeTax\` MUST be 0. Otherwise, calculate state tax based on progressive brackets and \`ohAllowances\`. Also calculate \`ohLocalIncomeTax\` based on the rate for the provided \`ohMunicipality\`.
-      19. For Pennsylvania: If \`paExemptStateTax\` is true, \`paStateIncomeTax\` MUST be 0. Otherwise, it is a flat 3.07% of taxable income. The \`paLocalIncomeTax\` field MUST be the sum of two components: the Local Earned Income Tax (EIT) and the Local Services Tax (LST). EIT is based on the higher of the residency or workplace rate (determined by PSD codes). LST is a flat annual fee (e.g., $52) prorated per pay period, unless \`paIsExemptLST\` is true (in which case LST component is 0).
-      20. For Michigan: If \`miExemptStateTax\` is true, \`miStateIncomeTax\` MUST be 0. Otherwise, it is a flat rate. Reduce taxable income by the exemption allowance amount multiplied by \`miAllowances\`. Additionally, if \`miCityOfResidence\` is a city with an income tax (e.g., Detroit, Grand Rapids, Flint), calculate \`miLocalIncomeTax\` based on that city's resident income tax rate. If no city is provided or it has no income tax, this MUST be 0.
-      21. For Kentucky: If \`kyExemptStateTax\` is true, \`kyStateIncomeTax\` MUST be 0. Otherwise, it is a flat rate. Apply tax credits based on \`kyAllowances\`. \`kyLocalIncomeTax\` is for local occupational taxes, which are a percentage of gross wages based on the work location provided in \`kyWorkLocation\`. Use the correct rate for the specified location.
-      22. For Colorado: If \`coExemptStateTax\` is true, \`coStateIncomeTax\` MUST be 0.
-      23. For Connecticut: If \`ctExemptStateTax\` is true, \`ctStateIncomeTax\` MUST be 0.
-      24. For Hawaii: If \`hiExemptStateTax\` is true, \`hiStateIncomeTax\` MUST be 0.
-      25. For Idaho: If \`idExemptStateTax\` is true, \`idStateIncomeTax\` MUST be 0. Add \`idAdditionalWithholding\` to the calculated state tax.
-      26. For Illinois: If \`ilExemptStateTax\` is true, \`ilStateIncomeTax\` MUST be 0.
-      27. For Iowa: If \`iaExemptStateTax\` is true, \`iaStateIncomeTax\` MUST be 0. Add \`iaAdditionalWithholding\` to the calculated state tax.
-      28. For Kansas: If \`ksExemptStateTax\` is true, \`ksStateIncomeTax\` MUST be 0.
-      29. For Louisiana: If \`laExemptStateTax\` is true, \`laStateIncomeTax\` MUST be 0.
-      30. For Maine: If \`meExemptStateTax\` is true, \`meStateIncomeTax\` MUST be 0.
-      31. For Maryland: If \`mdExemptStateTax\` is true, \`mdStateIncomeTax\` MUST be 0. If \`mdExemptCountyTax\` is true, \`mdCountyIncomeTax\` MUST be 0. Otherwise, calculate \`mdCountyIncomeTax\` using the provided county tax rate of ${countyRateMD}.
-      32. For Massachusetts: If \`maExemptStateTax\` is true, \`maStateIncomeTax\` MUST be 0. Add \`maAdditionalWithholding\` to the calculated state tax. If \`maExemptPfml\` is true, \`maPFML\` MUST be 0. Otherwise, calculate the MA Paid Family and Medical Leave contribution based on current rates.
-      33. For Minnesota: If \`mnExemptStateTax\` is true, \`mnStateIncomeTax\` MUST be 0.
-      34. For Mississippi: If \`msExemptStateTax\` is true, \`msStateIncomeTax\` MUST be 0.
-      35. For Missouri: If \`moExemptStateTax\` is true, \`moStateIncomeTax\` MUST be 0.
-      36. For Montana: If \`mtExemptStateTax\` is true, \`mtStateIncomeTax\` MUST be 0.
-      37. For Nebraska: If \`neExemptStateTax\` is true, \`neStateIncomeTax\` MUST be 0.
-      38. For New Mexico: If \`nmExemptStateTax\` is true, \`nmStateIncomeTax\` MUST be 0.
-      39. For North Carolina: If \`ncExemptStateTax\` is true, \`ncStateIncomeTax\` MUST be 0.
-      40. For North Dakota: If \`ndExemptStateTax\` is true, \`ndStateIncomeTax\` MUST be 0.
-      41. For Oklahoma: If \`okExemptStateTax\` is true, \`okStateIncomeTax\` MUST be 0.
-      42. For Rhode Island: If \`riExemptStateTax\` is true, \`riStateIncomeTax\` MUST be 0. If \`riExemptTdi\` is true, \`riTDI\` MUST be 0. Otherwise, calculate the RI Temporary Disability Insurance contribution.
-      43. For South Carolina: If \`scExemptStateTax\` is true, \`scStateIncomeTax\` MUST be 0.
-      44. For Utah: If \`utExemptStateTax\` is true, \`utStateIncomeTax\` MUST be 0.
-      45. For Vermont: If \`vtExemptStateTax\` is true, \`vtStateIncomeTax\` MUST be 0.
-      46. For Virginia: If \`vaExemptStateTax\` is true, \`vaStateIncomeTax\` MUST be 0. Otherwise, calculate Virginia state tax using the provided number of personal and dependent exemptions to determine the total exemption amount, which reduces taxable income before applying the tax brackets.
-      47. For Washington: \`waStateIncomeTax\` MUST be 0. If \`waExemptPfml\` is true, \`waPFML\` MUST be 0. Otherwise, calculate the WA Paid Family and Medical Leave premium.
-      48. For West Virginia: If \`wvExemptStateTax\` is true, \`wvStateIncomeTax\` MUST be 0.
-      49. For Wisconsin: If \`wiExemptStateTax\` is true, \`wiStateIncomeTax\` MUST be 0.
+      9.  For California: Under OBBB, calculate CA state income tax based on the simplified filing status. After calculating the initial tax, subtract the \`caTaxCredit\`. Add any \`caAdditionalWithholding\`. The fields \`caEstimatedDeductions\` and \`caEstimatedNonWageIncome\` should still be used to adjust taxable income for the state calculation. If \`caExemptStateTax\` is true, \`caStateIncomeTax\` MUST be 0. If \`caExemptSdi\` is true, \`caSDI\` MUST be 0.
+      10. For Pennsylvania: Under OBBB, the complex PSD codes are replaced by municipality names. \`paLocalIncomeTax\` is the sum of Local EIT and LST. You must infer the correct EIT rate based on the higher of the \`paResidencyMunicipality\` and \`paWorkplaceMunicipality\`. LST is a flat fee unless \`paIsExemptLST\` is true. If \`paExemptStateTax\` is true, \`paStateIncomeTax\` MUST be 0. It remains a flat 3.07%.
+      11. For all other states, adhere to their specific 2026 rules. If a state used an allowance-based system, assume it has been updated to a tax credit system in the spirit of OBBB unless otherwise specified in their regulations.
+      12. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0. Otherwise, calculate state tax based on the provided filing status and number of dependents. Use this information to apply the correct standard deduction and dependent exemption amounts to determine taxable income before applying the tax rates.
+      13. For Virginia: If \`vaExemptStateTax\` is true, \`vaStateIncomeTax\` MUST be 0. Otherwise, calculate Virginia state tax using the provided number of personal and dependent exemptions to determine the total exemption amount, which reduces taxable income before applying the tax brackets.
+      14. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0. Otherwise, calculate state tax using the filing status to determine the standard deduction. Then, subtract the value of dependent allowances and additional allowances to find the taxable income. The additional withholding amount should be added to the final calculated tax.
     `,
-        processedPreTaxDeductions,
-        processedPostTaxDeductions,
-    }
+    };
 }
 
 
@@ -462,7 +426,7 @@ export async function calculateTaxesOnly(formData: PayrollFormData): Promise<Tax
       ${prompt}
       
       Task:
-      Based on the data and guidelines provided, calculate ONLY the statutory tax deductions.
+      Based on the data and guidelines provided for TY 2026, calculate ONLY the statutory tax deductions.
       Return a single JSON object containing all the calculated tax values, adhering strictly to the provided 'taxesSchema'.
       Do not calculate any other part of the pay stub.
     `;
@@ -489,7 +453,7 @@ export async function calculateTaxesOnly(formData: PayrollFormData): Promise<Tax
 // Fix: Implement the missing checkPayStubCompliance function.
 export async function checkPayStubCompliance(payStubData: PayStubData, formData: PayrollFormData): Promise<string> {
   const prompt = `
-    Act as a meticulous US payroll compliance auditor. Your task is to perform a detailed audit of the provided pay stub data using the original form data for context. The pay period ends on ${formData.payPeriodEnd} for the current year.
+    Act as a meticulous US payroll compliance auditor for Tax Year 2026 under the OBBB regulations. Your task is to perform a detailed audit of the provided pay stub data using the original form data for context. The pay period ends on ${formData.payPeriodEnd}.
 
     Pay Stub Data (The final calculated result):
     ${JSON.stringify(payStubData, null, 2)}
@@ -497,22 +461,22 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
     Original Form Data (The inputs used for calculation):
     ${JSON.stringify(formData, null, 2)}
 
-    Please perform a detailed audit focusing on the following areas. For each point, state clearly whether it is CORRECT or INCORRECT. If incorrect, you MUST provide the correct value and a brief explanation.
+    Please perform a detailed audit focusing on the following areas. For each point, state clearly whether it is CORRECT or INCORRECT. If incorrect, you MUST provide the correct value and a brief explanation based on 2026 OBBB rules.
 
     1.  **Calculation Accuracy:**
         -   **Gross Pay:** Verify that the \`grossPay\` on the stub correctly sums all items in the \`earnings\` array.
         -   **Total Deductions:** Verify that the \`totalDeductions\` on the stub correctly sums all pre-tax deductions, all taxes, and all post-tax deductions.
         -   **Net Pay:** Verify that \`netPay\` is correctly calculated as \`grossPay\` - \`totalDeductions\`.
 
-    2.  **Tax Withholding Accuracy:**
-        -   **Recalculate and verify EACH tax amount** based on the provided form data and current federal and ${formData.state} state/local tax laws.
-        -   **Federal Income Tax:** Is the amount correct for the given filing status and taxable income?
-        -   **Social Security & Medicare (FICA):** Are these calculated correctly based on the gross pay?
-        -   **State & Local Taxes:** Are all applicable taxes for ${formData.state} (including state, county, city, SDI, PFML, etc.) calculated correctly?
+    2.  **Tax Withholding Accuracy (TY 2026 OBBB):**
+        -   **Recalculate and verify EACH tax amount** based on the provided form data and 2026 federal and ${formData.state} state/local tax laws.
+        -   **Federal Income Tax:** Is the amount correct for the given filing status and taxable income, after subtracting the federal tax credit?
+        -   **Social Security & Medicare (FICA):** Are these calculated correctly based on the OBBB rates (6.5% SS, 1.5% Medicare) and wage limits?
+        -   **State & Local Taxes:** Are all applicable taxes for ${formData.state} (including state, county, city, SDI, PFML, etc.) calculated correctly according to their 2026 regulations?
 
     3.  **Minimum Wage Compliance:**
         -   Calculate the effective hourly rate (total earnings / total hours worked).
-        -   Verify if this rate is above the current federal AND ${formData.state} state minimum wage.
+        -   Verify if this rate is above the 2026 federal AND ${formData.state} state minimum wage.
 
     4.  **Pay Stub Information:**
         -   Does the pay stub contain all legally required information for a pay statement in ${formData.state}? (e.g., employer/employee names, pay period, gross pay, itemized deductions, net pay).
@@ -531,7 +495,7 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
 // Fix: Implement the missing getRequiredForms function.
 export async function getRequiredForms(formData: PayrollFormData): Promise<RequiredForm[]> {
   const prompt = `
-    Based on the worker being classified as a '${formData.employeeType}' in the state of ${formData.state}, list all required federal and state onboarding and tax compliance forms.
+    Based on the worker being classified as a '${formData.employeeType}' in the state of ${formData.state} for Tax Year 2026, list all required federal and state onboarding and tax compliance forms.
     Provide direct links to the official government information page and the PDF download for each form.
     The response must be a JSON array of objects.
   `;
@@ -581,7 +545,7 @@ export async function calculatePayroll(formData: PayrollFormData, companyInfo: C
       - Employer State Unemployment (SUTA) Rate: ${formData.employeeType === 'employee' ? formData.employerSutaRate + '%' : 'N/A'}
       
       Task-Specific Instructions:
-      1.  Follow all the "Calculation Steps" from above.
+      1.  Follow all the "Calculation Steps" from above for TY 2026.
       2.  The final \`deductions.preTax\` array in the output JSON should ONLY contain the deductions (name and amount) that were actually applied for this period.
       3.  The final \`deductions.postTax\` array in the output JSON should ONLY contain the deductions (name and amount) that were actually applied for this period.
       4.  Calculate Total Deductions by summing all *applied* pre-tax deductions, all calculated taxes, and all *applied* post-tax deductions.

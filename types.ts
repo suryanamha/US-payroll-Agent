@@ -22,11 +22,11 @@ export interface PayrollFormData {
   overtimeHoursWorked: number;
   overtimeRateMultiplier: number;
   bonus: number;
-  federalFilingStatus: 'single' | 'married_jointly' | 'married_separately' | 'head_of_household';
-  federalAllowances: number;
+  federalFilingStatus: 'single' | 'married' | 'head_of_household';
+  federalTaxCredit: number;
   // NJ
-  stateFilingStatus: 'A' | 'B' | 'C' | 'D' | 'E'; // NJ specific filing statuses
-  stateAllowances: number; // NJ allowances
+  njFilingStatus: 'single' | 'married' | 'head_of_household';
+  njTaxCredit: number;
   njExemptSuiSdi: boolean;
   njExemptFli: boolean;
   njExemptStateTax: boolean;
@@ -46,8 +46,8 @@ export interface PayrollFormData {
   inExemptStateTax: boolean;
   inExemptCountyTax: boolean;
   // CA
-  caFilingStatus: 'single_or_married_one_income' | 'married_two_incomes' | 'head_of_household';
-  caAllowances: number;
+  caFilingStatus: 'single' | 'married' | 'head_of_household';
+  caTaxCredit: number;
   caEstimatedDeductions: number;
   caEstimatedNonWageIncome: number;
   caAdditionalWithholding: number;
@@ -89,8 +89,8 @@ export interface PayrollFormData {
   ohMunicipality: string;
   // PA
   paExemptStateTax: boolean;
-  paResidencyPsdCode: string;
-  paWorkplacePsdCode: string;
+  paResidencyMunicipality: string;
+  paWorkplaceMunicipality: string;
   paIsExemptLST: boolean;
   // MI
   miAllowances: number;
