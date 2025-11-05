@@ -52,7 +52,7 @@ const marylandCountyOptions = [{ value: '', label: 'Select a county' }].concat(
 );
 
 export const initialFormData: PayrollFormData = {
-    employeeName: '', employeeType: 'employee', state: 'AL', payPeriodStart: '', payPeriodEnd: '',
+    employeeName: '', employeeType: 'employee', flsaStatus: 'non-exempt', state: 'AL', payPeriodStart: '', payPeriodEnd: '',
     payFrequency: 'bi-weekly', payType: 'hourly', rate: 0, hoursWorked: 40, overtimeHoursWorked: 0,
     overtimeRateMultiplier: 1.5, bonus: 0, federalFilingStatus: 'single', federalTaxCredit: 0,
     njFilingStatus: 'single', njTaxCredit: 0, njExemptSuiSdi: false, njExemptFli: false, njExemptStateTax: false,
@@ -306,14 +306,28 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
         onDataChange(prevData => {
             let newData = { ...prevData, [name]: finalValue };
             
-            if (name === 'employeeType' && value === 'contractor') {
-                return { ...newData, federalFilingStatus: 'single', federalTaxCredit: 0, bonus: 0, employerSutaRate: 0, ...resetStateFields(initialFormData) };
+            if (name === 'employeeType' && finalValue === 'contractor') {
+                return { 
+                    ...newData, 
+                    flsaStatus: 'non-exempt',
+                    overtimeHoursWorked: 0,
+                    federalFilingStatus: 'single', 
+                    federalTaxCredit: 0, 
+                    bonus: 0, 
+                    employerSutaRate: 0, 
+                    ...resetStateFields(initialFormData) 
+                };
             }
+
+            if (name === 'flsaStatus' && finalValue === 'exempt') {
+                newData.overtimeHoursWorked = 0;
+            }
+            
             if (name === 'payType') {
-                return { ...newData, rate: 0, hoursWorked: value === 'hourly' ? 40 : 0, overtimeHoursWorked: 0 };
+                return { ...newData, rate: 0, hoursWorked: finalValue === 'hourly' ? 40 : 0, overtimeHoursWorked: 0 };
             }
             if (name === 'state') {
-                 const newState = value as PayrollFormData['state'];
+                 const newState = finalValue as PayrollFormData['state'];
                  const { multiplier } = getOvertimeInfo(newState);
                  return { ...newData, ...resetStateFields(initialFormData), overtimeRateMultiplier: multiplier };
             }
@@ -432,6 +446,18 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                 <Select label="Worker Type" id="employeeType" name="employeeType" value={data.employeeType} onChange={handleChange}>
                     <option value="employee">Employee (W-2)</option><option value="contractor">Contractor (1099)</option>
                 </Select>
+                 <Select 
+                    label="FLSA Status" 
+                    id="flsaStatus" 
+                    name="flsaStatus" 
+                    value={data.flsaStatus} 
+                    onChange={handleChange} 
+                    disabled={isContractor}
+                    info="Fair Labor Standards Act status. Non-Exempt employees are eligible for overtime pay. Exempt employees are not."
+                >
+                    <option value="non-exempt">Non-Exempt (Eligible for Overtime)</option>
+                    <option value="exempt">Exempt (Not Eligible for Overtime)</option>
+                </Select>
                  <Select label="State" id="state" name="state" value={data.state} onChange={handleChange}>
                     {SUPPORTED_STATES.map(state => (<option key={state.value} value={state.value}>{state.label}</option>))}
                 </Select>
@@ -451,8 +477,8 @@ export function PayrollForm({ data, onDataChange, onSubmit, suggestedTaxes, onSu
                      <>
                         <Input label="Hourly Rate ($)" id="rate" name="rate" type="number" min="0" step="0.01" value={data.rate} onChange={handleChange} required error={errors.rate} />
                         <Input label="Regular Hours Worked" id="hoursWorked" name="hoursWorked" type="number" min="0" step="0.1" value={data.hoursWorked} onChange={handleChange} required error={errors.hoursWorked}/>
-                        <Input label="Overtime Hours Worked" id="overtimeHoursWorked" name="overtimeHoursWorked" type="number" min="0" step="0.1" value={data.overtimeHoursWorked} onChange={handleChange} error={errors.overtimeHoursWorked}/>
-                        <Input label="Overtime Rate Multiplier" id="overtimeRateMultiplier" name="overtimeRateMultiplier" type="number" min="1" step="0.1" value={data.overtimeRateMultiplier} onChange={handleChange} error={errors.overtimeRateMultiplier} info={overtimeInfoText}/>
+                        <Input label="Overtime Hours Worked" id="overtimeHoursWorked" name="overtimeHoursWorked" type="number" min="0" step="0.1" value={data.overtimeHoursWorked} onChange={handleChange} error={errors.overtimeHoursWorked} disabled={isContractor || data.flsaStatus === 'exempt'}/>
+                        <Input label="Overtime Rate Multiplier" id="overtimeRateMultiplier" name="overtimeRateMultiplier" type="number" min="1" step="0.1" value={data.overtimeRateMultiplier} onChange={handleChange} error={errors.overtimeRateMultiplier} info={overtimeInfoText} disabled={isContractor || data.flsaStatus === 'exempt'}/>
                      </>
                 ) : ( <Input label="Annual Salary ($)" id="rate" name="rate" type="number" min="0" step="100" value={data.rate} onChange={handleChange} required error={errors.rate}/> )}
                  <Input label="Bonus ($) (Optional)" id="bonus" name="bonus" type="number" min="0" step="0.01" value={data.bonus} onChange={handleChange} error={errors.bonus} info="A one-time payment added to this pay period's gross earnings. It may be subject to different tax withholding rules (supplemental wages)." />

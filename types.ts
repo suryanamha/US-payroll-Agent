@@ -12,6 +12,7 @@ export type PostTaxDeductionType = 'Garnishment' | 'Roth IRA' | 'Union Dues' | '
 export interface PayrollFormData {
   employeeName: string;
   employeeType: 'employee' | 'contractor';
+  flsaStatus: 'non-exempt' | 'exempt';
   state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY' | 'OH' | 'PA' | 'MI' | 'KY' | 'CO' | 'CT' | 'HI' | 'ID' | 'IL' | 'IA' | 'KS' | 'LA' | 'ME' | 'MD' | 'MA' | 'MN' | 'MS' | 'MO' | 'MT' | 'NE' | 'NM' | 'NC' | 'ND' | 'OK' | 'RI' | 'SC' | 'UT' | 'VT' | 'VA' | 'WA' | 'WV' | 'WI';
   payPeriodStart: string;
   payPeriodEnd: string;
@@ -321,6 +322,7 @@ export interface PayStubData {
   employeeInfo: {
     name: string;
     employeeType: 'employee' | 'contractor';
+    flsaStatus: 'non-exempt' | 'exempt';
     state: 'NJ' | 'FL' | 'NY' | 'IN' | 'CA' | 'OR' | 'DE' | 'DC' | 'AL' | 'AK' | 'AZ' | 'AR' | 'GA' | 'TX' | 'NV' | 'NH' | 'SD' | 'TN' | 'WY' | 'OH' | 'PA' | 'MI' | 'KY' | 'CO' | 'CT' | 'HI' | 'ID' | 'IL' | 'IA' | 'KS' | 'LA' | 'ME' | 'MD' | 'MA' | 'MN' | 'MS' | 'MO' | 'MT' | 'NE' | 'NM' | 'NC' | 'ND' | 'OK' | 'RI' | 'SC' | 'UT' | 'VT' | 'VA' | 'WA' | 'WV' | 'WI';
   };
   payPeriod: {

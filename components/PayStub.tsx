@@ -42,6 +42,7 @@ const StubRow: React.FC<{ label: string; value: string | number; isBold?: boolea
 export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
     const { companyInfo, employeeInfo, payPeriod, earnings, grossPay, totalEarningsYTD, deductions, totalDeductions, netPay, netPayYTD, employerContributions } = data;
     const isContractor = employeeInfo.employeeType === 'contractor';
+    const { flsaStatus } = employeeInfo;
     const printContainerRef = useRef<HTMLDivElement>(null);
     const { taxes } = deductions;
     
@@ -121,7 +122,11 @@ export const PayStub = forwardRef(({ data }: { data: PayStubData }, ref) => {
             </header>
 
             <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 text-sm">
-                <div className="bg-gray-50 p-4 rounded"><h4 className="font-bold text-gray-700 mb-2">{isContractor ? 'Contractor' : 'Employee'}</h4><p>{employeeInfo.name} ({employeeInfo.state})</p></div>
+                <div className="bg-gray-50 p-4 rounded">
+                    <h4 className="font-bold text-gray-700 mb-2">{isContractor ? 'Contractor' : 'Employee'}</h4>
+                    <p>{employeeInfo.name} ({employeeInfo.state})</p>
+                    {!isContractor && <p className="text-xs text-gray-600 mt-1">FLSA Status: {flsaStatus === 'exempt' ? 'Exempt' : 'Non-Exempt'}</p>}
+                </div>
                 <div className="bg-gray-50 p-4 rounded"><h4 className="font-bold text-gray-700 mb-2">Pay Period</h4><p>{payPeriod.startDate} - {payPeriod.endDate}</p></div>
                 <div className="bg-gray-50 p-4 rounded"><h4 className="font-bold text-gray-700 mb-2">Pay Date</h4><p>{payPeriod.payDate}</p></div>
             </section>

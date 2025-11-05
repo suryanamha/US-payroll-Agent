@@ -18,14 +18,17 @@ export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData
         let earnings = 0;
         if (data.rate > 0) {
             if (data.payType === 'hourly') {
-                earnings = (data.rate * data.hoursWorked) + (data.overtimeHoursWorked * data.rate * data.overtimeRateMultiplier);
+                const overtimePay = data.flsaStatus === 'non-exempt'
+                    ? (data.overtimeHoursWorked * data.rate * data.overtimeRateMultiplier)
+                    : 0;
+                earnings = (data.rate * data.hoursWorked) + overtimePay;
             } else { // salary
                 const periods: Record<typeof data.payFrequency, number> = { 'weekly': 52, 'bi-weekly': 26, 'semi-monthly': 24, 'monthly': 12 };
                 earnings = data.rate / periods[data.payFrequency];
             }
         }
         return earnings + (data.bonus || 0);
-    }, [data.rate, data.hoursWorked, data.overtimeHoursWorked, data.overtimeRateMultiplier, data.bonus, data.payType, data.payFrequency]);
+    }, [data.rate, data.hoursWorked, data.overtimeHoursWorked, data.overtimeRateMultiplier, data.bonus, data.payType, data.payFrequency, data.flsaStatus]);
 
     const { activePreTaxDeductions, preTaxTotal, activePostTaxDeductions, postTaxTotal } = useMemo(() => {
         const payPeriodEndDate = data.payPeriodEnd;
@@ -65,6 +68,9 @@ export function PayStubPreview({ data, suggestedTaxes }: { data: PayrollFormData
                 <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">Pay Stub Preview</h3>
                 <div className="space-y-2">
                     <PreviewRow label="Employee" value={data.employeeName || '...'} />
+                    {data.employeeType === 'employee' && (
+                        <PreviewRow label="FLSA Status" value={data.flsaStatus === 'exempt' ? 'Exempt' : 'Non-Exempt'} className="text-gray-500" />
+                    )}
                     <hr className="my-2"/>
                     
                     {grossPay > 0 && <PreviewRow label="Gross Pay" value={grossPay} isBold className="border-t pt-1.5" />}

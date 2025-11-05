@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PayrollFormData, PayStubData, RequiredForm, CompanyInfo, Taxes } from '../types';
 import { INDIANA_COUNTY_TAX_RATES } from '../data/IndianaCountyTaxRates';
@@ -100,6 +101,7 @@ const payStubSchema = {
             properties: {
                 name: { type: Type.STRING },
                 employeeType: { type: Type.STRING },
+                flsaStatus: { type: Type.STRING },
                 state: { type: Type.STRING },
             },
         },
@@ -238,6 +240,7 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       - Name: ${formData.employeeName}
       - State: ${formData.state}
       - Type: ${formData.employeeType}
+      - FLSA Status: ${formData.employeeType === 'employee' ? formData.flsaStatus : 'N/A'}
       - Pay Period End Date: ${formData.payPeriodEnd}
       - Pay Frequency: ${formData.payFrequency}
       - Pay Type: ${formData.payType}
@@ -436,6 +439,7 @@ const buildBasePrompt = (formData: PayrollFormData) => {
       12. For Alabama: If \`alExemptStateTax\` is true, \`alStateIncomeTax\` MUST be 0. Otherwise, calculate state tax based on the provided filing status and number of dependents. Use this information to apply the correct standard deduction and dependent exemption amounts to determine taxable income before applying the tax rates.
       13. For Virginia: If \`vaExemptStateTax\` is true, \`vaStateIncomeTax\` MUST be 0. Otherwise, calculate Virginia state tax using the provided number of personal and dependent exemptions to determine the total exemption amount, which reduces taxable income before applying the tax brackets.
       14. For Georgia: If \`gaExemptStateTax\` is true, \`gaStateIncomeTax\` MUST be 0. Otherwise, calculate state tax using the filing status to determine the standard deduction. Then, subtract the value of dependent allowances and additional allowances to find the taxable income. The additional withholding amount should be added to the final calculated tax.
+      15. For FLSA Status: If the worker's 'flsaStatus' is 'exempt', they are not eligible for overtime. 'Overtime Pay' MUST be 0, and the 'earnings' array must not contain an entry for overtime, regardless of any 'overtimeHoursWorked' provided. If 'non-exempt', calculate overtime normally.
     `,
     };
 }
@@ -495,11 +499,14 @@ export async function checkPayStubCompliance(payStubData: PayStubData, formData:
         -   **Social Security & Medicare (FICA):** Are these calculated correctly based on the OBBB rates (6.5% SS, 1.5% Medicare) and wage limits?
         -   **State & Local Taxes:** Are all applicable taxes for ${formData.state} (including state, county, city, SDI, PFML, etc.) calculated correctly according to their 2026 regulations?
 
-    3.  **Minimum Wage Compliance:**
+    3.  **FLSA Status Compliance:**
+        -   Verify that if the employee was classified as 'exempt' (original FLSA status: ${formData.flsaStatus}), no overtime was paid. If 'non-exempt', verify overtime was calculated correctly if overtime hours were worked.
+
+    4.  **Minimum Wage Compliance:**
         -   Calculate the effective hourly rate (total earnings / total hours worked).
         -   Verify if this rate is above the 2026 federal AND ${formData.state} state minimum wage.
 
-    4.  **Pay Stub Information:**
+    5.  **Pay Stub Information:**
         -   Does the pay stub contain all legally required information for a pay statement in ${formData.state}? (e.g., employer/employee names, pay period, gross pay, itemized deductions, net pay).
 
     Provide the final output as a clear, formatted report using markdown for headings and lists. Start with a summary of findings (e.g., "Compliance Check: PASSED" or "Compliance Check: FAILED with X issues found.").
@@ -574,7 +581,7 @@ export async function calculatePayroll(formData: PayrollFormData, companyInfo: C
       6.  If the worker is an 'employee', calculate the Employer's SUTA contribution for this period. The formula is Gross Pay * (${formData.employerSutaRate} / 100). Place this value in the \`employerContributions.suta\` field. This amount SHOULD NOT be included in the 'totalDeductions' and SHOULD NOT affect 'netPay'. If the worker is a 'contractor' or the rate is 0, set \`employerContributions.suta\` to 0.
       7.  Update the YTD values. The final \`totalEarningsYTD\` should be the starting \`grossPayYTD\` plus the current period's Gross Pay. The final \`netPayYTD\` should be the starting \`netPayYTD\` plus the current period's Net Pay.
       8.  The \`companyInfo\` in the output must match the provided company info exactly.
-      9.  The \`employeeInfo\` in the output must contain the worker's name, type, and state.
+      9.  The \`employeeInfo\` in the output must contain the worker's name, type, state, and flsaStatus.
       10. Respond with a single, complete JSON object that strictly follows the 'payStubSchema'.
     `;
 
